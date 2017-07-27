@@ -1,0 +1,64 @@
+{
+  "name": "vue-motion-cam",
+  "version": "0.1.0",
+  "description": "Vue/Vuetify RestBundle for webcam motion capture",
+  "main": "index.js",
+  "directories": {
+    "test": "test",
+    "dist": "dist",
+    "src": "src"
+  },
+  "dependencies": {
+    "rest-bundle": "^0.20.4"
+  },
+  "devDependencies": {
+    "babel-core": "^6.0.0",
+    "babel-loader": "^6.0.0",
+    "babel-preset-latest": "^6.0.0",
+    "concurrently": "^3.2.0",
+    "cross-env": "^3.0.0",
+    "css-loader": "^0.28.0",
+    "mocha": "^3.2.0",
+    "should": "^11.2.0",
+    "supertest": "^3.0.0",
+    "webpack": "^2.4.1",
+    "webpack-dev-server": "^2.2.0"
+  },
+  "scripts": {
+    "build": "bash scripts/build",
+    "build:vue": "npm run build:vue-dev && npm run build:vue-service",
+    "build:vue-dev": "cross-env NODE_ENV=production webpack --config cfg/webpack.dev.js --progress --hide-modules",
+    "build:vue-service": "cross-env NODE_ENV=production webpack --config cfg/webpack.service.js --progress --hide-modules",
+    "clean": "rm -f *.log*; rimraf dist",
+    "dev": "concurrently \"scripts/server.js test aloha\" \"npm run dev:vue\"",
+    "dev:debug": "concurrently \"scripts/server.js --log-debug test aloha\" \"npm run dev:vue\"",
+    "dev:vue": "cross-env NODE_ENV=development webpack-dev-server --config cfg/webpack.dev.js --hot",
+    "start": "scripts/server.js ",
+    "test": "npm run test:verbose",
+    "test:test": "mocha -w -R min --inline-diffs -g TEST",
+    "test:verbose": "mocha --inline-diffs",
+    "test:watch": "mocha -w --inline-diffs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kinann-org/vue-motion-cam.git"
+  },
+  "bin": {},
+  "keywords": [
+    "REST",
+    "RestBundle",
+    "express",
+    "kinann-org",
+    "motion",
+    "firepick",
+    "webcam",
+    "vue",
+    "vuetify"
+  ],
+  "author": "Karl Lew",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kinann-org/vue-motion-cam/issues"
+  },
+  "homepage": "https://github.com/kinann-org/vue-motion-cam"
+}
