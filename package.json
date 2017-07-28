@@ -29,7 +29,7 @@
     "build:vue": "npm run build:vue-dev && npm run build:vue-service",
     "build:vue-dev": "cross-env NODE_ENV=production webpack --config cfg/webpack.dev.js --progress --hide-modules",
     "build:vue-service": "cross-env NODE_ENV=production webpack --config cfg/webpack.service.js --progress --hide-modules",
-    "clean": "rm -f *.log*; rimraf dist",
+    "clean": "rm -f *.log*; rimraf dist; rimraf .motion",
     "dev": "concurrently \"scripts/server.js test aloha\" \"npm run dev:vue\"",
     "dev:debug": "concurrently \"scripts/server.js --log-debug test aloha\" \"npm run dev:vue\"",
     "dev:vue": "cross-env NODE_ENV=development webpack-dev-server --config cfg/webpack.dev.js --hot",

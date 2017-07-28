@@ -2,6 +2,7 @@
     const winston = require('winston');
     const srcPkg = require("../package.json");
     const path = require("path");
+    const MotionConf = require("./motion-conf");
     const rb = require("rest-bundle");
 
     class RestServer extends rb.RestBundle {
@@ -12,63 +13,67 @@
 
             Object.defineProperty(this, "handlers", {
                 value: super.handlers.concat([
-                    //this.resourceMethod("get", "drives", this.getDrives),
-                    //this.resourceMethod("put", "drives", this.putDrives),
+                    this.resourceMethod("get", "motion-conf", this.getMotionConf),
+                    this.resourceMethod("put", "motion-conf", this.putMotionConf),
                 ]),
             });
-            this.apiFile = `${srcPkg.name}.${name}.drives`;
+            var service = "singleton"; // this.name for non-singletons
+            this.apiFile = `${srcPkg.name}.${service}.motion-conf`;
+            this.motionConf = new MotionConf();
             this.options = Object.assign({}, options);
         }
 
-        ////updateDrives(drives) {
-            //var json = drives.map(d => JSON.stringify(d));
-            //var newDrives = json.map(j => StepperDrive.fromJSON(j));
-            //this.df = new DriveFrame(newDrives, this.options);
-        //}
+        updateMotionConf(conf) {
+            this.motionConf = new MotionConf(conf);
+        }
 
-        //get drives() {
-            //return this.df.drives;
-        //}
+        loadApiModel(filePath) {
+            return new Promise((resolve, reject) => {
+                super.loadApiModel(filePath)
+                    .then(model => {
+                        try {
+                            if (model) {
+                                this.updateMotionConf(model);
+                                resolve(model);
+                            } else if (filePath === this.apiFile) {
+                                resolve(this.motionConf.toJSON());
+                            } else {
+                                throw new Error("unknown api model:" + filePath);
+                            }
+                        } catch (err) { // implementation error
+                            winston.error(err.message, err.stack);
+                            reject(err);
+                        }
+                    })
+                    .catch(err => reject(err));
+            });
+        }
 
-        //loadApiModel(filePath) {
-            //return new Promise((resolve, reject) => {
-                //super.loadApiModel(filePath)
-                    //.then(model => {
-                        //if (model) {
-                            //this.updateDrives(model.drives);
-                            //resolve(model);
-                        //} else if (filePath === this.apiFile) {
-                            //resolve({
-                                //drives: this.drives,
-                            //});
-                        //} else {
-                            //reject(new Error("unknown api model:" + filePath));
-                        //}
-                    //})
-                    //.catch(err => reject(err));
-            //});
-        //}
+        saveApiModel(model, filePath) {
+            return new Promise((resolve, reject) => {
+                super.saveApiModel(model, filePath)
+                    .then(res => {
+                        try {
+                            if (filePath === this.apiFile) {
+                                this.updateMotionConf(model);
+                            }
+                            resolve(res);
+                        } catch (err) { // implementation error
+                            winston.error(err.message, err.stack);
+                            reject(err);
+                        }
+                    })
+                    .catch(e => reject(e));
+            });
+        }
 
-        //saveApiModel(model, filePath) {
-            //return new Promise((resolve, reject) => {
-                //super.saveApiModel(model, filePath)
-                    //.then(res => {
-                        //if (filePath === this.apiFile) {
-                            //this.updateDrives(model.drives);
-                        //}
-                        //resolve(res);
-                    //})
-                    //.catch(e => reject(e));
-            //});
-        //}
+        getMotionConf(req, res, next) {
+            return this.getApiModel(req, res, next, this.apiFile);
+        }
 
-        //getDrives(req, res, next) {
-            //return this.getApiModel(req, res, next, this.apiFile);
-        //}
-
-        //putDrives(req, res, next) {
-            //return this.putApiModel(req, res, next, this.apiFile);
-        //}
+        putMotionConf(req, res, next) {
+            return this.putApiModel(req, res, next, this.apiFile);
+        }
 
 
     } //// class RestServer
