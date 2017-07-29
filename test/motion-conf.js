@@ -4,12 +4,12 @@
     const fs = require("fs");
     const winston = require("winston");
     const MotionConf = exports.MotionConf || require("../index").MotionConf;
-    const appdir = process.cwd();
-    const confdir = path.join(appdir, ".motion");
+    const appDir = process.cwd();
+    const confDir = path.join(appDir, ".motion");
     const defaultMotion = {
         ffmpeg_cap_new: "on",
         locate_motion_mode: "on",
-        logfile: path.join(appdir,".motion","motion.log"),
+        logfile: path.join(appDir,".motion","motion.log"),
         max_movie_time: "60",
         output_pictures: "best",
         output_debug_pictures: "off",
@@ -20,7 +20,7 @@
         stream_localhost: "on",
         stream_maxrate: "10",
         stream_quality: "75",
-        target_dir: path.join(appdir,".motion"),
+        target_dir: path.join(appDir,".motion"),
         webcontrol_port: "8090",
         webcontrol_html_output: "on",
         webcontrol_localhost: "on",
@@ -100,14 +100,15 @@
         var async = function*() {
             try {
                 var mc = new MotionConf();
-                var motion = path.join(confdir, "motion.conf");
-                var camera1 = path.join(confdir, "camera1.conf");
+                var confName = "motion-test.conf";
+                var motion = path.join(confDir, confName);
+                var camera1 = path.join(confDir, "camera1.conf");
                 if (fs.existsSync(camera1)) {
                     yield fs.unlink(camera1, 
                         (err) => err ? async.throw(err) : async.next(true));
                 }
-                yield mc.writeConf().then(r=>async.next(r)).catch(e=>async.throw(e));
-                should.ok(fs.existsSync(confdir));
+                yield mc.writeConf(confDir, confName).then(r=>async.next(r)).catch(e=>async.throw(e));
+                should.ok(fs.existsSync(confDir));
                 should.ok(fs.existsSync(camera1), camera1);
                 should.ok(fs.existsSync(motion), motion);
                 var confmotion = yield fs.readFile(motion, (e,r)=>e?async.throw(e):async.next(r.toString()));

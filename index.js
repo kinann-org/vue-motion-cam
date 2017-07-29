@@ -1,4 +1,4 @@
 module.exports = {
     MotionConf: require("./src/motion-conf"),
-    RestServer: require("./src/rest-server"),
+    MotionBundle: require("./src/motion-bundle"),
 };

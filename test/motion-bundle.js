@@ -1,6 +1,6 @@
-(typeof describe === 'function') && describe("RestServer", function() {
+(typeof describe === 'function') && describe("MotionBundle", function() {
     const should = require("should");
-    const RestServer = require("../src/rest-server");
+    const MotionBundle = require("../index").MotionBundle;
     const MotionConf = require("../index").MotionConf;
     const supertest = require('supertest');
     const winston = require('winston');
@@ -8,7 +8,7 @@
     const rb = require('rest-bundle');
     const rbh = new rb.RbHash();
     const fs = require('fs');
-    const APIMODEL_PATH = `api-model/${srcPkg.name}.singleton.motion-conf.json`;
+    const APIMODEL_PATH = `api-model/${srcPkg.name}.test.motion-conf.json`;
     const DEFAULT_CONF = new MotionConf().toJSON();
     const app = require("../scripts/server.js");
 
@@ -17,7 +17,7 @@
     function testRestBundle(app) {
         return app.locals.restBundles.filter(rb => rb.name==='test')[0];
     }
-    function testInit() { // initialize singleton for each test
+    function testInit() { 
         return app;
     }
 

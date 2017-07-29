@@ -5,7 +5,7 @@
     const MotionConf = require("./motion-conf");
     const rb = require("rest-bundle");
 
-    class RestServer extends rb.RestBundle {
+    class MotionBundle extends rb.RestBundle {
         constructor(name = "test", options = {}) {
             super(name, Object.assign({
                 srcPkg,
@@ -17,8 +17,7 @@
                     this.resourceMethod("put", "motion-conf", this.putMotionConf),
                 ]),
             });
-            var service = "singleton"; // this.name for non-singletons
-            this.apiFile = `${srcPkg.name}.${service}.motion-conf`;
+            this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
             this.motionConf = new MotionConf();
             this.options = Object.assign({}, options);
         }
@@ -76,7 +75,7 @@
         }
 
 
-    } //// class RestServer
+    } //// class MotionBundle
 
-    module.exports = exports.RestServer = RestServer;
+    module.exports = exports.MotionBundle = MotionBundle;
 })(typeof exports === "object" ? exports : (exports = {}));

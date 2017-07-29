@@ -152,6 +152,7 @@
     class MotionConf {
         constructor(options = {}) {
             this.type = this.constructor.name;
+            this.name = options.name || "test";
             this.version = options.version || "3.2";
             this.motion = Object.assign({
                 ffmpeg_cap_new: "on",
@@ -232,7 +233,7 @@
             });
         }
 
-        writeConf(confPath = motionDir) {
+        writeConf(confPath = motionDir, confName = "motion.conf") {
             var that = this;
             return new Promise((resolve, reject) => {
                 var async = function*() {
@@ -241,7 +242,7 @@
                             yield fs.mkdir(confPath, (err) => err ? async.throw(err) : async.next(err));
                         }
                         var motion = that.motionConf(confPath);
-                        yield fs.writeFile(path.join(confPath, "motion.conf"), motion,
+                        yield fs.writeFile(path.join(confPath, confName), motion,
                             (err) => err ? async.throw(err) : async.next(true));
                         var cameras = that.cameraConf();
                         for (var i = 0; i < cameras.length; i++) {
