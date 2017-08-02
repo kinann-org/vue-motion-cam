@@ -1,4 +1,5 @@
 (function(exports) {
+    const { spawn } = require('child_process');
     const winston = require('winston');
     const srcPkg = require("../package.json");
     const fs = require("fs");
@@ -152,8 +153,15 @@
     class MotionConf {
         constructor(options = {}) {
             this.type = this.constructor.name;
+            this.status = null; //indeterminate
             this.name = options.name || "test";
+            this.confName = options.confName || `motion-${this.name}.conf`;
+            this.confDir = options.confDir || motionDir;
             this.version = options.version || "3.2";
+            Object.defineProperty(this, "STATUS_UNKNOWN", { value: "unknown" });
+            Object.defineProperty(this, "STATUS_OPEN", { value: "open" });
+            Object.defineProperty(this, "STATUS_ERROR", { value: "error" });
+            this.status = this.STATUS_UNKNOWN;
             this.motion = Object.assign({
                 ffmpeg_cap_new: "on",
                 locate_motion_mode: "on",
@@ -161,10 +169,9 @@
                 max_movie_time: "60",
                 output_pictures: "best",
                 output_debug_pictures: "off",
-                picture_filename: "%v-%Y%m%d%H%M%S-%q",
                 picture_type: "jpeg",
+                process_id_file: path.join(motionDir, `pid-${this.name}.txt`),
                 quality: "100",
-                snapshot_filename: "%v-%Y%m%d%H%M%S-snapshot",
                 stream_localhost: "on",
                 stream_maxrate: "10",
                 stream_quality: "75",
@@ -177,20 +184,27 @@
             var optionCams = options.cameras && options.cameras.length && options.cameras || [{}];
             var cameras = new Array(nCams).fill({});
             this.cameras = cameras.map((cam, i) => {
+                var cam = `CAM${i+1}`;
                 return Object.assign({
                     camera_id: `${i+1}`,
-                    videodevice: "/dev/video" + i,
                     input: "-1",
-                    text_left: `CAMERA ${i+1}`,
-                    target_dir: path.join(motionDir, `cam${i+1}`),
-                    picture_filename: `CAM${i+1}_%v-%Y%m%d%H%M%S-%q`,
+                    movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
+                    picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
+                    snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
                     stream_port: `808${i+1}`,
+                    target_dir: path.join(motionDir, `${cam}`),
+                    text_left: `${cam}`,
+                    videodevice: "/dev/video" + i,
+
                 }, optionCams[i]);
             });
         }
 
         confKeyValueString(key, value) {
             var conf = "";
+            if (key === "logfile") {
+                return "";
+            }
             if (this.version === "3.2") {
                 if (key === "input" && value === "-1") {
                     // do nothing (3.2 does not like -1);
@@ -233,20 +247,20 @@
             });
         }
 
-        writeConf(confPath = motionDir, confName = "motion.conf") {
+        writeConf() {
             var that = this;
             return new Promise((resolve, reject) => {
                 var async = function*() {
                     try {
-                        if (!fs.existsSync(confPath)) {
-                            yield fs.mkdir(confPath, (err) => err ? async.throw(err) : async.next(err));
+                        if (!fs.existsSync(that.confDir)) {
+                            yield fs.mkdir(that.confDir, (err) => err ? async.throw(err) : async.next(err));
                         }
-                        var motion = that.motionConf(confPath);
-                        yield fs.writeFile(path.join(confPath, confName), motion,
+                        var motion = that.motionConf(that.confDir);
+                        yield fs.writeFile(path.join(that.confDir, that.confName), motion,
                             (err) => err ? async.throw(err) : async.next(true));
                         var cameras = that.cameraConf();
                         for (var i = 0; i < cameras.length; i++) {
-                            var campath = path.join(confPath, `camera${i+1}.conf`);
+                            var campath = path.join(that.confDir, `camera${i+1}.conf`);
                             yield fs.writeFile(campath, cameras[i],
                                 (err) => err ? async.throw(err) : async.next(true));
                         };
@@ -262,6 +276,104 @@
         toJSON() {
             return this;
         }
+
+        shellCommands() {
+            var confPath = path.join(this.confDir, this.confName);
+            return {
+                startCamera: ['motion','-c', `${confPath}`],
+            }
+        }
+
+        startCamera() {
+            var that = this;
+            return new Promise((resolve, reject) => {
+                var async = function* () {
+                    try {
+                        yield that.writeConf().then(r=>async.next(r)).catch(e=>async.throw(e));
+                        var r = yield that._spawnMotion().then(r=>async.next(r)).catch(e=>async.throw(e));
+                        resolve(r);
+                    } catch (err) {
+                        reject(err);
+                    }
+                }();
+                async.next();
+            });
+        }
+
+        _spawnMotion() {
+            const cmd = this.shellCommands().startCamera;
+            const that = this;
+            const logfile = fs.openSync(that.motion.logfile, 'w');
+            if (that.status === that.STATUS_OPEN) {
+                return Promise.reject(new Error(`${that.name} camera is already open`));
+            }
+            return new Promise((resolve, reject) => {
+                function rejectWith(err) {
+                    var err = err instanceof Error ? err : new Error(err);
+                    winston.error(err.stack);
+                    that.statusText = err.message;
+                    that.status = that.STATUS_ERROR;
+                    reject(err);
+                    if (that.motion_process) {
+                        try {
+                            const pid = that.motion_process.pid;
+                            fs.writeSync(logfile, `[vmc] startCamera failed--killing pid:${pid};\n`);
+                            process.kill(pid);;
+                            that.motion_process = null;
+                        } catch (err) {
+                            winston.error(err.stack);
+                        }
+                    }
+                }
+                try {
+                    that.status = that.STATUS_UNKNOWN;
+                    fs.writeSync(logfile, `[vmc] startCamera ${new Date().toLocaleString()}\n`);
+                    var mp = that.motion_process = spawn(cmd[0], cmd.slice(1));
+                    mp.stdout.on('data', (chunk) => fs.writeSync(logfile, chunk));
+                    mp.stderr.on('data', (chunk) => {
+                        var str = chunk.toString();
+                        fs.writeSync(logfile, str);
+                        str.split("\n").forEach(line => {
+                            if (line.match(/Problem enabling stream server/)) {
+                                rejectWith(line);
+                            } else if (line.match(/Failed to open video device/)) {
+                                rejectWith(line);
+                            } else if (line.match(/Error selecting input/)) {
+                                rejectWith(line);
+                            } else if (line.match(/Started stream/)) {
+                                that.status = that.STATUS_OPEN;
+                                that.statusText = line;
+                                resolve(mp);
+                            } else {
+                                // ignore other lines
+                            }
+                        });
+                    });
+                    mp.on('exit', (code,signal) => {
+                        winston.info("motion exit:", code ? "OK" : `ERR:${code}`, signal);
+                    });
+                    mp.on('close', (code,signal) => {
+                        winston.info("motion closed:", code ? "OK" : `ERR:${code}`, signal);
+                    });
+                    mp.on('error', err => {
+                        winston.error("motion error:", err.message, err.stack);
+                    });
+                } catch (err) {
+                    rejectWith(err);
+                }
+            });
+        }
+
+        stopCamera() {
+            if (this.motion_process == null) {
+                return Promise.reject(new Error(`${this.name} camera is not active`));
+            }
+            var pid = this.motion_process.pid;
+            process.kill(pid);
+            this.motion_process = null;
+            return Promise.resolve("killed");
+        }
+       
 
     } // class MotionConf
 

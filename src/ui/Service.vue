@@ -17,43 +17,11 @@
             <rb-identity class="mb-3" :service="serviceFromUrl"/>
         </v-card>
     </v-card-text>
-    <v-card-text v-show="mode==='configure'">
-        <h6>Configuration</h6>
-        <v-card hover v-tooltip:bottom='{html:"<kr-drives/>"}'>
-            <kr-drives class="mb-3" :service="serviceFromUrl"/>
-        </v-card>
-    </v-card-text>
-    <v-card-text v-show="mode==='operate'">
-        <h6 >Position</h6>
-        <v-card hover v-tooltip:bottom='{html:"<kr-position/>"}' >
-            <kr-position :service="serviceFromUrl"/>
-        </v-card>
-    </v-card-text>
-    <div style="position:relative">
-        <v-bottom-nav style="bottom:60px" class="transparent">
-            <v-btn flat light class="teal--text" @click="mode='connect'" :value="mode === 'connect'">
-              <span>Connect</span>
-              <v-icon>cloud</v-icon>
-            </v-btn>
-            <v-btn flat light class="teal--text" @click="mode='configure'" :value="mode === 'configure'">
-              <span>Configure</span>
-              <v-icon>build</v-icon>
-            </v-btn>
-            <v-btn flat light class="teal--text" @click="mode = 'operate'" :value="mode === 'operate'">
-              <span>Operate</span>
-              <v-icon>face</v-icon>
-            </v-btn>
-        </v-bottom-nav>
-    </div> 
-    <v-card-text height="60px" style="position:relative">
-    </v-card-text> 
 </v-card>
 
 </template><script>
 
 import rbvue from "rest-bundle/index-vue.js";
-import KrPosition from './KrPosition.vue';
-import KrDrives  from './KrDrives.vue';
 
 export default {
     name: "service",
@@ -80,8 +48,6 @@ export default {
     mounted() {
     },
     components: {
-        KrPosition,
-        KrDrives,
     },
 }
 

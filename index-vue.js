@@ -1,7 +1,7 @@
-//import KrDrives from "./src/ui/KrDrives.vue";
+import VmcCamera from "./src/ui/VmcCamera.vue";
 
 var components = {
-    //KrDrives,
+    VmcCamera,
 }
 function plugin(Vue, options) {
     Object.keys(components).forEach( key => Vue.component(key, components[key]));

@@ -2,21 +2,26 @@
     const should = require("should");
     const path = require("path");
     const fs = require("fs");
+    const child_process = require("child_process");
     const winston = require("winston");
     const MotionConf = exports.MotionConf || require("../index").MotionConf;
     const appDir = process.cwd();
     const confDir = path.join(appDir, ".motion");
+    const confName = "motion-test.conf";
+    const confOpts = {
+        confDir,
+        confName,
+    };
     const defaultMotion = {
         ffmpeg_cap_new: "on",
         locate_motion_mode: "on",
-        logfile: path.join(appDir,".motion","motion.log"),
+        logfile: path.join(confDir, "motion.log"),
         max_movie_time: "60",
         output_pictures: "best",
         output_debug_pictures: "off",
-        picture_filename: "%v-%Y%m%d%H%M%S-%q",
         picture_type: "jpeg",
         quality: "100",
-        snapshot_filename: "%v-%Y%m%d%H%M%S-snapshot",
+        process_id_file: path.join(confDir, "pid-test.txt"),
         stream_localhost: "on",
         stream_maxrate: "10",
         stream_quality: "75",
@@ -99,15 +104,14 @@
     it("writeConf() writes configuration file", function(done) {
         var async = function*() {
             try {
-                var mc = new MotionConf();
-                var confName = "motion-test.conf";
+                var mc = new MotionConf(confOpts);
                 var motion = path.join(confDir, confName);
                 var camera1 = path.join(confDir, "camera1.conf");
                 if (fs.existsSync(camera1)) {
                     yield fs.unlink(camera1, 
                         (err) => err ? async.throw(err) : async.next(true));
                 }
-                yield mc.writeConf(confDir, confName).then(r=>async.next(r)).catch(e=>async.throw(e));
+                yield mc.writeConf().then(r=>async.next(r)).catch(e=>async.throw(e));
                 should.ok(fs.existsSync(confDir));
                 should.ok(fs.existsSync(camera1), camera1);
                 should.ok(fs.existsSync(motion), motion);
@@ -118,6 +122,55 @@
                 done();
             } catch(err) {
                 winston.error(err.message, err.stack);
+            }
+        }();
+        async.next();
+    });
+    it("shellCommands() returns motion shell commands", function() {
+        var mc = new MotionConf(confOpts);
+        var confPath = path.join(confDir, confName);
+        should.deepEqual(mc.shellCommands(), {
+            startCamera: ['motion', '-c', `${confPath}`],
+        });
+    });
+    it("startCamera() starts motion camera service", function(done) {
+        done(); return; // TODO
+        var async = function*() {
+            try {
+                const mc = new MotionConf(confOpts);
+                const logPath = path.join(confDir, 'motion.log');
+                fs.existsSync(logPath) && fs.unlinkSync(logPath);
+                mc.status.should.equal(mc.STATUS_UNKNOWN);
+                var process = yield mc.startCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
+                process.should.instanceOf(child_process.ChildProcess);
+                process.should.equal(mc.motion_process);
+                mc.status.should.equal(mc.STATUS_OPEN);
+                mc.statusText.should.match(/Started stream/);
+                mc.statusText.should.match(/8081/);
+                should.ok(fs.existsSync(logPath));
+                var log = fs.readFileSync(logPath).toString();
+                log.should.match(/Started stream/);
+                log.should.match(/8081/);
+                var response = yield mc.stopCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
+                response.should.equal("killed");
+                done();
+            } catch(err) {
+                done(err);
+            }
+        }();
+        async.next();
+    });
+    it("stopCamera() stops motion camera service", function(done) {
+        var async = function*() {
+            try {
+                var mc = new MotionConf();
+                yield mc.stopCamera().catch(e=> {
+                    e.message.should.match(/camera is not active/);
+                    done();
+                });
+                done(new Error("expected failure"));
+            } catch (err) {
+                done(err);
             }
         }();
         async.next();

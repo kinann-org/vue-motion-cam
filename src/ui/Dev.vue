@@ -82,10 +82,6 @@
 import Introduction from './Introduction.vue';
 import AllServices from './AllServices.vue';
 import Service from './Service.vue';
-import KrPosition from './KrPosition.vue';
-import KrDrives from './KrDrives.vue';
-import KrBeltDrive from './KrBeltDrive.vue';
-import KrScrewDrive from './KrScrewDrive.vue';
 import rbvue from "rest-bundle/index-vue";
 import appvue from "../../index-vue";
 
@@ -124,10 +120,6 @@ export default {
         Introduction,
         AllServices,
         Service,
-        KrPosition,
-        KrDrives,
-        KrBeltDrive,
-        KrScrewDrive,
     },
 }
 

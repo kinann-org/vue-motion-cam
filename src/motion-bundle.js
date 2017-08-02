@@ -15,14 +15,21 @@
                 value: super.handlers.concat([
                     this.resourceMethod("get", "motion-conf", this.getMotionConf),
                     this.resourceMethod("put", "motion-conf", this.putMotionConf),
+                    this.resourceMethod("post", "camera/start", this.postCameraStart),
+                    this.resourceMethod("post", "camera/stop", this.postCameraStop),
                 ]),
             });
             this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
-            this.motionConf = new MotionConf();
+            this.motionConf = new MotionConf({
+                name: this.name,
+            });
             this.options = Object.assign({}, options);
         }
 
         updateMotionConf(conf) {
+            var conf = Object.assign({}, conf, {
+                name: this.name,
+            });
             this.motionConf = new MotionConf(conf);
         }
 
@@ -72,6 +79,14 @@
 
         putMotionConf(req, res, next) {
             return this.putApiModel(req, res, next, this.apiFile);
+        }
+
+        postCameraStart(req, res, next) {
+            return this.motionConf.startCamera();
+        }
+
+        postCameraStop(req, res, next) {
+            return this.motionConf.stopCamera();
         }
 
 

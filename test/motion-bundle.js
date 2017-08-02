@@ -116,6 +116,68 @@
         }();
         async.next();
     });
+    it("POST /camera/stop stops camera service", function(done) {
+        var async = function* () {
+            try {
+                var app = testInit();
+                if (fs.existsSync(APIMODEL_PATH)) {
+                    fs.unlinkSync(APIMODEL_PATH);
+                }
+                var newConf = Object.assign({}, DEFAULT_CONF);
+                var putData = {
+                    apiModel: newConf,
+                };
+
+                // send bad request
+                var response = yield supertest(app).post("/test/camera/stop").send("").expect((res) => {
+                    res.statusCode.should.equal(500);
+                    res.body.should.match(/test camera is not active/);
+                }).end((e,r) => e ? async.throw(e) : async.next(r));
+
+                done();
+            } catch(err) {
+                winston.error(err.message, err.stack);
+                throw(err);
+            }
+        }();
+        async.next();
+    });
+    it("TESTPOST /camera/start starts camera service", function(done) {
+        done(); return; // TODO
+        winston.level = 'debug';
+        try {
+        var async = function* () {
+            try {
+                var app = testInit();
+                if (fs.existsSync(APIMODEL_PATH)) {
+                    fs.unlinkSync(APIMODEL_PATH);
+                }
+                var newConf = Object.assign({}, DEFAULT_CONF);
+                var putData = {
+                    apiModel: newConf,
+                };
+
+                // send bad request
+                console.log("X");
+                var response = yield supertest(app).post("/test/camera/start").send("").expect((res) => {
+                console.log("Y");
+                    res.statusCode.should.equal(200);
+                    res.body.should.match(/test camera is not active/);
+                }).end((e,r) => e ? (console.log("A"),async.throw(e)) : async.next(r));
+
+                done();
+            } catch(err) {
+            console.log("B");
+                winston.error(err.message, err.stack);
+                done(err);
+            }
+        }();
+        } catch (err) {
+                console.log("C");
+                winston.error(err.message, err.stack);
+        }
+        async.next();
+    });
     it("finalize TEST suite", function() {
         app.locals.rbServer.close();
         winston.info("end test suite");
