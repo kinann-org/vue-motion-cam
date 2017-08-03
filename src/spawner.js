@@ -5,16 +5,16 @@
     const path = require("path");
     const appdir = process.cwd();
 
-    class SpawnScraper {
+    class Spawner {
         constructor(options = {}) {
-            this.logName = options.logName || path.join(appdir, "spawn-scraper.log");
+            this.logName = options.logName || path.join(appdir, "spawner.log");
             this.logger = options.logger || new (winston.Logger)({
                 transports: [
                     //new (winston.transports.Console)(),
                     new (winston.transports.File)({ filename: this.logName })
                 ]
             });
-            this.logger.info("SpawnScraper created");
+            this.logger.info("Spawner created");
             Object.defineProperty(this, "LINE_INFO", {value:1});
             Object.defineProperty(this, "LINE_RESOLVE", {value:0});
             Object.defineProperty(this, "LINE_REJECT", {value:-1});
@@ -71,7 +71,7 @@
 
                 try {
                     that.status = that.STATUS_UNKNOWN;
-                    this.logger.info("SpawnScraper spawning:", cmd);
+                    this.logger.info("Spawner spawning:", cmd);
                     var proc = that.process = spawn(cmd[0], cmd.slice(1));
                     proc.stdout.on('data', (chunk) => filterChunk('stdout', chunk, that.stdOutFilter));
                     proc.stderr.on('data', (chunk) => filterChunk('stderr', chunk, that.stdErrFilter));
@@ -93,9 +93,9 @@
             });
         }
 
-    } // class SpawnScraper
+    } // class Spawner
 
-    module.exports = exports.SpawnScraper = SpawnScraper;
+    module.exports = exports.Spawner = Spawner;
 })(typeof exports === "object" ? exports : (exports = {}));
 
 (typeof describe === 'function') && describe("MotionBundle", function() {
@@ -103,16 +103,16 @@
     const fs = require('fs');
     const path = require('path');
     const winston = require("winston");
-    const SpawnScraper = exports.SpawnScraper; 
+    const Spawner = exports.Spawner; 
     const appdir = process.cwd();
-    const logName = path.join(appdir, "spawn-scraper.log");
+    const logName = path.join(appdir, "spawner.log");
     
     it("accepts a logger", function(done) {
         var async = function* () {
             try {
                 /// default logger
                 fs.existsSync(logName) && fs.unlink(logName);
-                var ss = new SpawnScraper();
+                var ss = new Spawner();
                 ss.logger.should.instanceOf(winston.Logger);
                 yield ss.logger.info("test", function (err, level, msg, meta) {
                     // wait for log file creation 
@@ -121,7 +121,7 @@
                 should.ok(fs.existsSync(logName));
 
                 // injected logger
-                var ss2 = new SpawnScraper({
+                var ss2 = new Spawner({
                     logger: ss.logger,
                 });
                 ss2.logger.should.equal(ss.logger);
@@ -137,7 +137,7 @@
     it("spawn() launches command", function(done) {
         var async = function*(){
             try {
-                var ss = new SpawnScraper({
+                var ss = new Spawner({
                     stdOutFilter: (line) => {
                         if (line.match(/green/)) {
                             return ss.LINE_RESOLVE;
