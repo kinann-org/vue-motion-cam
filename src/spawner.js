@@ -15,11 +15,20 @@
                 ]
             });
             this.logger.info("Spawner created");
-            Object.defineProperty(this, "LINE_INFO", {value:1});
-            Object.defineProperty(this, "LINE_RESOLVE", {value:0});
-            Object.defineProperty(this, "LINE_REJECT", {value:-1});
-            this.stdOutFilter = options.stdOutFilter || (line => this.LINE_INFO);
+            this.stdOutFilter = options.stdOutFilter || (line => Spawner.LINE_INFO);
             this.stdErrFilter = options.stdErrFilter || this.stdOutFilter;
+        }
+
+        static get LINE_INFO() {
+            return 1;
+        }
+
+        static get LINE_RESOLVE() {
+            return 0;
+        }
+
+        static get LINE_REJECT() {
+            return -1;
         }
 
         spawn(cmd) {
@@ -58,10 +67,10 @@
                         that.logger.info(name, line);
                         if (!handled) {
                             var action = filter.call(that, line);
-                            if (action === that.LINE_REJECT) {
+                            if (action === Spawner.LINE_REJECT) {
                                 handled = true;
                                 rejectWith(line);
-                            } else if (action === that.LINE_RESOLVE) {
+                            } else if (action === Spawner.LINE_RESOLVE) {
                                 handled = true;
                                 resolve(that.process);
                             }
@@ -114,11 +123,8 @@
                 fs.existsSync(logName) && fs.unlink(logName);
                 var ss = new Spawner();
                 ss.logger.should.instanceOf(winston.Logger);
-                yield ss.logger.info("test", function (err, level, msg, meta) {
-                    // wait for log file creation 
-                    err ? async.throw(err) : async.next(msg);
-                })
-                should.ok(fs.existsSync(logName));
+                var exists = yield setTimeout(()=>fs.existsSync(logName) ? async.next(true) : async.next(false), 50);
+                should.ok(exists);
 
                 // injected logger
                 var ss2 = new Spawner({
@@ -140,14 +146,14 @@
                 var ss = new Spawner({
                     stdOutFilter: (line) => {
                         if (line.match(/green/)) {
-                            return ss.LINE_RESOLVE;
+                            return Spawner.LINE_RESOLVE;
                         } else if (line.match(/red/)) {
-                            return ss.LINE_REJECT;
+                            return Spawner.LINE_REJECT;
                         } else if (line.match(/four/)) {
                             done(new Error("should never happen"));
-                            return ss.LINE_REJECT;
+                            return Spawner.LINE_REJECT;
                         } else {
-                            return ss.LINE_INFO;
+                            return Spawner.LINE_INFO;
                         }
                     },
                 });
