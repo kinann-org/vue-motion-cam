@@ -142,10 +142,7 @@
         }();
         async.next();
     });
-    it("TESTPOST /camera/start starts camera service", function(done) {
-        done(); return; // TODO
-        winston.level = 'debug';
-        try {
+    it("POST /camera/start starts camera service", function(done) {
         var async = function* () {
             try {
                 var app = testInit();
@@ -157,25 +154,26 @@
                     apiModel: newConf,
                 };
 
-                // send bad request
-                console.log("X");
-                var response = yield supertest(app).post("/test/camera/start").send("").expect((res) => {
-                console.log("Y");
-                    res.statusCode.should.equal(200);
-                    res.body.should.match(/test camera is not active/);
-                }).end((e,r) => e ? (console.log("A"),async.throw(e)) : async.next(r));
+                // start camera
+                var res = yield supertest(app).post("/test/camera/start").timeout(1000).send("")
+                    .end((e,r) => e ? async.throw(e) : async.next(r));
+                should.ok(res);
+                res.statusCode.should.equal(200);
+                res.body.should.match(/camera started/);
+
+                // stop camera
+                var res = yield supertest(app).post("/test/camera/stop").timeout(1000).send("")
+                    .end((e,r) => e ? async.throw(e) : async.next(r));
+                should.ok(res);
+                res.statusCode.should.equal(200);
+                res.body.should.match(/camera stopped/);
 
                 done();
             } catch(err) {
-            console.log("B");
                 winston.error(err.message, err.stack);
                 done(err);
             }
         }();
-        } catch (err) {
-                console.log("C");
-                winston.error(err.message, err.stack);
-        }
         async.next();
     });
     it("finalize TEST suite", function() {

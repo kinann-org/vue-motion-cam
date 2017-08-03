@@ -82,11 +82,23 @@
         }
 
         postCameraStart(req, res, next) {
-            return this.motionConf.startCamera();
+            return new Promise((resolve, reject) => {
+                this.motionConf.startCamera()
+                .then(process => resolve({
+                    status: `camera started`,
+                }))
+                .catch(err => reject(err));
+            });
         }
 
         postCameraStop(req, res, next) {
-            return this.motionConf.stopCamera();
+            return new Promise((resolve, reject) => {
+                this.motionConf.stopCamera()
+                .then(response => resolve({
+                    status: `camera stopped`,
+                }))
+                .catch(err => reject(err));
+            });
         }
 
 

@@ -21,7 +21,7 @@
         output_debug_pictures: "off",
         picture_type: "jpeg",
         quality: "100",
-        process_id_file: path.join(confDir, "pid-test.txt"),
+        //process_id_file: path.join(confDir, "pid-test.txt"),
         stream_localhost: "on",
         stream_maxrate: "10",
         stream_quality: "75",
@@ -134,16 +134,15 @@
         });
     });
     it("startCamera() starts motion camera service", function(done) {
-        done(); return; // TODO
         var async = function*() {
             try {
-                const mc = new MotionConf(confOpts);
                 const logPath = path.join(confDir, 'motion.log');
                 fs.existsSync(logPath) && fs.unlinkSync(logPath);
+                const mc = new MotionConf(confOpts);
                 mc.status.should.equal(mc.STATUS_UNKNOWN);
                 var process = yield mc.startCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
                 process.should.instanceOf(child_process.ChildProcess);
-                process.should.equal(mc.motion_process);
+                process.should.equal(mc.spawner.process);
                 mc.status.should.equal(mc.STATUS_OPEN);
                 mc.statusText.should.match(/Started stream/);
                 mc.statusText.should.match(/8081/);
@@ -152,7 +151,7 @@
                 log.should.match(/Started stream/);
                 log.should.match(/8081/);
                 var response = yield mc.stopCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
-                response.should.equal("killed");
+                response.should.equal(true);
                 done();
             } catch(err) {
                 done(err);

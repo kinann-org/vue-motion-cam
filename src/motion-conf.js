@@ -24,12 +24,12 @@
             this.motion = Object.assign({
                 ffmpeg_cap_new: "on",
                 locate_motion_mode: "on",
-                logfile: path.join(motionDir, "motion.log"),
+                logfile: path.join(this.confDir, "motion.log"),
                 max_movie_time: "60",
                 output_pictures: "best",
                 output_debug_pictures: "off",
                 picture_type: "jpeg",
-                process_id_file: path.join(motionDir, `pid-${this.name}.txt`),
+                //process_id_file: path.join(this.confDir, `pid-${this.name}.txt`), // not used
                 quality: "100",
                 stream_localhost: "on",
                 stream_maxrate: "10",
@@ -57,9 +57,10 @@
 
                 }, optionCams[i]);
             });
+            var that = this;
             this.spawner = new Spawner({
-                //logName: this.motion.logFile,
-                stdOutFilter: this._lineFilter,
+                logName: this.motion.logfile,
+                stdOutFilter: function(line) { return that._lineFilter(line) },
             });
         }
 
@@ -170,17 +171,17 @@
 
         _lineFilter(line) {
             if (line.match(/Problem enabling stream server/)) {
-                return this.spawner.LINE_REJECT;
+                return Spawner.LINE_REJECT;
             } else if (line.match(/Failed to open video device/)) {
-                return this.spawner.LINE_REJECT;
+                return Spawner.LINE_REJECT;
             } else if (line.match(/Error selecting input/)) {
-                return this.spawner.LINE_REJECT;
+                return Spawner.LINE_REJECT;
             } else if (line.match(/Started stream/)) {
-                that.status = that.STATUS_OPEN;
-                that.statusText = line;
-                return this.spawner.LINE_RESOLVE;
+                this.status = this.STATUS_OPEN;
+                this.statusText = line;
+                return Spawner.LINE_RESOLVE;
             } else {
-                return this.spawner.LINE_INFO;
+                return Spawner.LINE_INFO;
             }
         }
 
@@ -189,11 +190,9 @@
             const that = this;
             if (that.status === that.STATUS_OPEN) {
                 var err = new Error(`${that.name} camera is already open`);
-                that.spawner.logger.error(err);
                 return Promise.reject(err);
             }
             that.status = that.STATUS_UNKNOWN;
-            that.spawner.logger.info(`[vmc] startCamera ${new Date().toLocaleString()}`);
             return that.spawner.spawn(cmd);
         }
 
@@ -265,10 +264,7 @@
             if (this.spawner.process == null) {
                 return Promise.reject(new Error(`${this.name} camera is not active`));
             }
-            var pid = this.spawner.process.pid;
-            process.kill(pid);
-            this.spawner.process = null;
-            return Promise.resolve("killed");
+            return this.spawner.kill();
         }
        
 
