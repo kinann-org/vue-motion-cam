@@ -18,6 +18,9 @@
         <v-card-text>
             <img src="http://localhost:8081/" />
         </v-card-text>
+        <v-card-text>
+            <rb-tree-view :data="restBundleModel()"/>
+        </v-card-text>
     </v-card>
 
 </div>

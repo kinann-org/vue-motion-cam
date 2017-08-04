@@ -3,9 +3,10 @@
     const srcPkg = require("../package.json");
     const path = require("path");
     const MotionConf = require("./motion-conf");
+    const V4L2Ctl = require("./v4l2-ctl");
     const rb = require("rest-bundle");
 
-    class MotionBundle extends rb.RestBundle {
+    class VmcBundle extends rb.RestBundle {
         constructor(name = "test", options = {}) {
             super(name, Object.assign({
                 srcPkg,
@@ -13,6 +14,7 @@
 
             Object.defineProperty(this, "handlers", {
                 value: super.handlers.concat([
+                    this.resourceMethod("get", "devices", this.getDevices),
                     this.resourceMethod("get", "motion-conf", this.getMotionConf),
                     this.resourceMethod("put", "motion-conf", this.putMotionConf),
                     this.resourceMethod("post", "camera/start", this.postCameraStart),
@@ -24,6 +26,7 @@
                 name: this.name,
             });
             this.options = Object.assign({}, options);
+            this.devices = [];
         }
 
         updateMotionConf(conf) {
@@ -73,6 +76,10 @@
             });
         }
 
+        getDevices(req, res, next) {
+            return new V4L2Ctl().listDevices().then(r => (this.devices=r));
+        }
+
         getMotionConf(req, res, next) {
             return this.getApiModel(req, res, next, this.apiFile);
         }
@@ -105,7 +112,7 @@
         }
 
 
-    } //// class MotionBundle
+    } //// class VmcBundle
 
-    module.exports = exports.MotionBundle = MotionBundle;
+    module.exports = exports.VmcBundle = VmcBundle;
 })(typeof exports === "object" ? exports : (exports = {}));

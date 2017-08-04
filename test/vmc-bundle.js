@@ -1,6 +1,6 @@
-(typeof describe === 'function') && describe("MotionBundle", function() {
+(typeof describe === 'function') && describe("VmcBundle", function() {
     const should = require("should");
-    const MotionBundle = require("../index").MotionBundle;
+    const VmcBundle = require("../index").VmcBundle;
     const MotionConf = require("../index").MotionConf;
     const supertest = require('supertest');
     const winston = require('winston');
@@ -142,7 +142,7 @@
         }();
         async.next();
     });
-    it("TESTPOST /camera/start starts camera service", function(done) {
+    it("POST /camera/start starts camera service", function(done) {
         var async = function* () {
             try {
                 var app = testInit();
@@ -189,6 +189,36 @@
             } catch(err) {
                 winston.error(err.message, err.stack);
                 done(err);
+            }
+        }();
+        async.next();
+    });
+    it("GET /devices returns array of video devices", function(done) {
+        var async = function* () {
+            try {
+                var app = testInit();
+
+                if (fs.existsSync(APIMODEL_PATH)) {
+                    fs.unlinkSync(APIMODEL_PATH);
+                }
+                var response = yield supertest(app).get("/test/devices").expect((res) => {
+                    res.statusCode.should.equal(200);
+                    var devices = res.body;
+                    devices.should.instanceOf(Array);
+                    if (fs.existsSync('/dev/video0')) {
+                        devices[0].device.should.equal('/dev/video0');
+                        if (fs.existsSync('/dev/video1')) {
+                            devices[1].device.should.equal('/dev/video1');
+                        }
+                    }
+                    for (var i = 0; i < devices.length; i++) {
+                        devices[i].should.properties(['device', 'description']);
+                    }
+                }).end((e,r) => e ? async.throw(e) : async.next(r));
+                done();
+            } catch(err) {
+                winston.error(err.message, err.stack);
+                throw(err);
             }
         }();
         async.next();
