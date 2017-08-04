@@ -142,7 +142,7 @@
         }();
         async.next();
     });
-    it("POST /camera/start starts camera service", function(done) {
+    it("TESTPOST /camera/start starts camera service", function(done) {
         var async = function* () {
             try {
                 var app = testInit();
@@ -155,6 +155,23 @@
                 };
 
                 // start camera
+                var res = yield supertest(app).post("/test/camera/start").timeout(1000).send("")
+                    .end((e,r) => e ? async.throw(e) : async.next(r));
+                should.ok(res);
+                res.statusCode.should.equal(200);
+                res.body.should.match(/camera started/);
+
+                // stop camera
+                var res = yield supertest(app).post("/test/camera/stop").timeout(1000).send("")
+                    .end((e,r) => e ? async.throw(e) : async.next(r));
+                should.ok(res);
+                res.statusCode.should.equal(200);
+                res.body.should.match(/camera stopped/);
+
+                // TODO: Eliminate need for this timeout
+                yield setTimeout(() => async.next(), 500);
+
+                // re-start camera
                 var res = yield supertest(app).post("/test/camera/start").timeout(1000).send("")
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);

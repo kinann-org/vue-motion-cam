@@ -188,76 +188,21 @@
         _spawnMotion() {
             const cmd = this.shellCommands().startCamera;
             const that = this;
-            if (that.status === that.STATUS_OPEN) {
-                var err = new Error(`${that.name} camera is already open`);
-                return Promise.reject(err);
+            if (that.process && that.status === that.STATUS_OPEN) {
+                const pid = that.process.pid;
+                try {
+                console.log("verifying pid", pid);
+                    process.kill(pid, 0);
+                console.log("verifying pid", "active");
+                    var err = new Error(`${that.name} camera is already open`);
+                    return Promise.reject(err);
+                } catch (err) {
+                console.log("verifying pid", "inactive");
+                    // process not active
+                }
             }
             that.status = that.STATUS_UNKNOWN;
             return that.spawner.spawn(cmd);
-        }
-
-        old_spawnMotion() {
-            const cmd = this.shellCommands().startCamera;
-            const that = this;
-            const logfile = fs.openSync(that.motion.logfile, 'w');
-            if (that.status === that.STATUS_OPEN) {
-                return Promise.reject(new Error(`${that.name} camera is already open`));
-            }
-            return new Promise((resolve, reject) => {
-                function rejectWith(err) {
-                    var err = err instanceof Error ? err : new Error(err);
-                    winston.error(err.stack);
-                    that.statusText = err.message;
-                    that.status = that.STATUS_ERROR;
-                    reject(err);
-                    if (that.motion_process) {
-                        try {
-                            const pid = that.motion_process.pid;
-                            fs.writeSync(logfile, `[vmc] startCamera failed--killing pid:${pid};\n`);
-                            process.kill(pid);;
-                            that.motion_process = null;
-                        } catch (err) {
-                            winston.error(err.stack);
-                        }
-                    }
-                }
-                try {
-                    that.status = that.STATUS_UNKNOWN;
-                    fs.writeSync(logfile, `[vmc] startCamera ${new Date().toLocaleString()}\n`);
-                    var mp = that.motion_process = spawn(cmd[0], cmd.slice(1));
-                    mp.stdout.on('data', (chunk) => fs.writeSync(logfile, chunk));
-                    mp.stderr.on('data', (chunk) => {
-                        var str = chunk.toString();
-                        fs.writeSync(logfile, str);
-                        str.split("\n").forEach(line => {
-                            if (line.match(/Problem enabling stream server/)) {
-                                rejectWith(line);
-                            } else if (line.match(/Failed to open video device/)) {
-                                rejectWith(line);
-                            } else if (line.match(/Error selecting input/)) {
-                                rejectWith(line);
-                            } else if (line.match(/Started stream/)) {
-                                that.status = that.STATUS_OPEN;
-                                that.statusText = line;
-                                resolve(mp);
-                            } else {
-                                // ignore other lines
-                            }
-                        });
-                    });
-                    mp.on('exit', (code,signal) => {
-                        winston.info("motion exit:", code ? "OK" : `ERR:${code}`, signal);
-                    });
-                    mp.on('close', (code,signal) => {
-                        winston.info("motion closed:", code ? "OK" : `ERR:${code}`, signal);
-                    });
-                    mp.on('error', err => {
-                        winston.error("motion error:", err.message, err.stack);
-                    });
-                } catch (err) {
-                    rejectWith(err);
-                }
-            });
         }
 
         stopCamera() {

@@ -87,7 +87,10 @@
                 .then(process => resolve({
                     status: `camera started`,
                 }))
-                .catch(err => reject(err));
+                .catch(err => {
+                    winston.error(err.stack);
+                    reject(err);
+                });
             });
         }
 

@@ -121,7 +121,6 @@
                 }
 
                 try {
-                    that.status = that.STATUS_UNKNOWN;
                     var proc = that.process = spawn(cmd[0], cmd.slice(1));
                     that.logger.info("Spawner spawned:", proc.pid);
                     proc.stdout.on('data', (chunk) => filterChunk(chunk, that.stdOutFilter));
@@ -175,7 +174,7 @@
                 var result = yield ss.spawn(['echo','hello']).then(r=>async.next(r)).catch(r=>async.next(r));
                 result.should.instanceOf(ChildProcess);
                 ss.logger.should.instanceOf(winston.Logger);
-                var exists = yield setTimeout(()=>fs.existsSync(logName) ? async.next(true) : async.next(false), 50);
+                var exists = yield setTimeout(()=>fs.existsSync(logName) ? async.next(true) : async.next(false), 200);
                 should.ok(exists);
 
                 // injected logger
