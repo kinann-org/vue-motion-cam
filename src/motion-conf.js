@@ -50,7 +50,7 @@
                     movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
                     picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
                     snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
-                    stream_port: `808${i+1}`,
+                    stream_port: `${i+1+Number(this.motion.webcontrol_port)}`,
                     target_dir: path.join(motionDir, `${cam}`),
                     text_left: `${cam}`,
                     videodevice: "/dev/video" + i,

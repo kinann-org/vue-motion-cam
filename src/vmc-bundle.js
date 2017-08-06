@@ -77,7 +77,8 @@
         }
 
         getDevices(req, res, next) {
-            return new V4L2Ctl().listDevices().then(r => (this.devices=r));
+            var that = this;
+            return new V4L2Ctl().listDevices().then(r => (that.devices=r));
         }
 
         getMotionConf(req, res, next) {
@@ -109,6 +110,13 @@
                 }))
                 .catch(err => reject(err));
             });
+        }
+
+        getState() {
+            return {
+                api: 'vmc-bundle',
+                devices: this.devices,
+            };
         }
 
 

@@ -16,10 +16,22 @@
             <v-btn flat @click="stopCamera()">stop</v-btn>
         </v-toolbar>
         <v-card-text>
-            <img src="http://localhost:8081/" />
-        </v-card-text>
-        <v-card-text>
-            <rb-tree-view :data="restBundleModel()"/>
+            <v-layout>
+                <v-flex>
+                    <v-list dense>
+                        <v-list-tile v-for="(device,i) in rbService.devices" :key="i">
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{device.device}}</v-list-tile-title>
+                                <v-list-tile-sub-title>{{device.description}}</v-list-tile-sub-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+                    </v-list>
+                </v-flex>
+                <v-flex>
+                    <img src="http://localhost:8081/" />
+                </v-flex>
+            </v-layout>
+            <rb-tree-view :data="rbService" :rootKey="service"/>
         </v-card-text>
     </v-card>
 
@@ -63,6 +75,7 @@ export default {
         RbApiDialog,
     },
     created() {
+        this.$http.get([this.restOrigin(),this.service,"devices"].join("/"));
         this.restBundleModel();
         this.rbDispatch("apiLoad");
     },

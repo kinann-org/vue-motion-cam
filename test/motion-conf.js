@@ -68,8 +68,8 @@
         var conf3_2 = mc3_2.cameraConf();
         conf3_2.should.instanceOf(Array);
         conf3_2.length.should.equal(1);
-        conf3_2[0].should.not.match(/\nstream_port\t8081\n/);  // v4
-        conf3_2[0].should.match(/\nwebcam_port\t8081\n/);  // v3.2
+        conf3_2[0].should.not.match(/\nstream_port\t8091\n/);  // v4
+        conf3_2[0].should.match(/\nwebcam_port\t8091\n/);  // v3.2
         conf3_2[0].should.not.match(/\ninput\t-1\n/);  // v4
         var mc = new MotionConf();
         var conf = mc.cameraConf();
@@ -81,25 +81,25 @@
         var conf4 = mc4.cameraConf();
         conf4.should.instanceOf(Array);
         conf4.length.should.equal(1);
-        conf4[0].should.match(/\nstream_port\t8081\n/);  // v4
-        conf4[0].should.not.match(/\nwebcam_port\t8081\n/);  // v3.2
+        conf4[0].should.match(/\nstream_port\t8091\n/);  // v4
+        conf4[0].should.not.match(/\nwebcam_port\t8091\n/);  // v3.2
         conf4[0].should.match(/\ninput\t-1\n/);  // v4
 
         var mc = new MotionConf({
             cameras: [{},{},{
-                stream_port:8093,
+                stream_port:8073,
             }],
         });
         var conf = mc.cameraConf();
         winston.debug("conf", conf);
         conf.should.instanceOf(Array);
         conf.length.should.equal(3);
-        conf[0].should.match(/\nwebcam_port\t8081\n/);  // v3.2
-        conf[0].should.not.match(/\nstream_port\t8081\n/);  // v4
-        conf[1].should.match(/\nwebcam_port\t8082\n/);  // v3.2
-        conf[1].should.not.match(/\nstream_port\t8082\n/);  // v4
-        conf[2].should.match(/\nwebcam_port\t8093\n/);  // v3.2
-        conf[2].should.not.match(/\nstream_port\t8093\n/);  // v4
+        conf[0].should.match(/\nwebcam_port\t8091\n/);  // v3.2
+        conf[0].should.not.match(/\nstream_port\t8091\n/);  // v4
+        conf[1].should.match(/\nwebcam_port\t8092\n/);  // v3.2
+        conf[1].should.not.match(/\nstream_port\t8092\n/);  // v4
+        conf[2].should.match(/\nwebcam_port\t8073\n/);  // v3.2
+        conf[2].should.not.match(/\nstream_port\t8073\n/);  // v4
     });
     it("writeConf() writes configuration file", function(done) {
         var async = function*() {
@@ -145,11 +145,11 @@
                 process.should.equal(mc.spawner.process);
                 mc.status.should.equal(mc.STATUS_OPEN);
                 mc.statusText.should.match(/Started stream/);
-                mc.statusText.should.match(/8081/);
+                mc.statusText.should.match(/8091/);
                 should.ok(fs.existsSync(logPath));
                 var log = fs.readFileSync(logPath).toString();
                 log.should.match(/Started stream/);
-                log.should.match(/8081/);
+                log.should.match(/8091/);
                 var response = yield mc.stopCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
                 response.should.equal(true);
                 done();
