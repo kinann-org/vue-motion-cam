@@ -174,4 +174,23 @@
         }();
         async.next();
     });
+    it("bindDevices() binds current devices to saved cameras", function() {
+        var mc = new MotionConf();
+        mc.cameras.length.should.equal(1);
+        should(mc.cameras[0].description).equal(undefined);
+        mc.bindDevices([{
+            device: '/dev/video0',
+            description: 'redcamera',
+        },{
+            device: '/dev/video2',
+            description: 'bluecamera',
+        }]);
+        mc.cameras.length.should.equal(2);
+        should(mc.cameras[0].description).equal('redcamera');
+        should(mc.cameras[0].videodevice).equal('/dev/video0');
+        should(mc.cameras[0].available).equal(true);
+        should(mc.cameras[1].description).equal('bluecamera');
+        should(mc.cameras[1].videodevice).equal('/dev/video2');
+        should(mc.cameras[1].available).equal(true);
+    });
 })

@@ -211,6 +211,33 @@
             }
             return this.spawner.kill();
         }
+
+        bindDevices(devices) {
+            var cameras = this.cameras;
+            cameras.forEach(camera => (camera.available = false));
+            devices.forEach((device, i) => {
+                var camera = cameras.filter(camera => (camera.description === device.description))[0];
+                camera = camera || cameras.filter(camera => (camera.videodevice === device.device))[0];
+                if (camera == null) { // not found
+                    var icam = cameras.length;
+                    var cam = `CAM${icam+1}`;
+                    camera = {
+                        camera_id: `${icam+1}`,
+                        input: "-1",
+                        movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
+                        picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
+                        snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
+                        stream_port: `${icam+1+Number(this.motion.webcontrol_port)}`,
+                        target_dir: path.join(motionDir, `${cam}`),
+                        text_left: `${cam}`,
+                    }
+                    cameras.push(camera);
+                }
+                camera.videodevice = device.device;
+                camera.description = device.description;
+                camera.available = true;
+            });
+        }
        
 
     } // class MotionConf
