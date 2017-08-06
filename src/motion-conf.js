@@ -217,7 +217,7 @@
             cameras.forEach(camera => (camera.available = false));
             devices.forEach((device, i) => {
                 var camera = cameras.filter(camera => (camera.description === device.description))[0];
-                camera = camera || cameras.filter(camera => (camera.videodevice === device.device))[0];
+                camera = camera || cameras.filter(camera => (camera.videodevice === device.filepath))[0];
                 if (camera == null) { // not found
                     var icam = cameras.length;
                     var cam = `CAM${icam+1}`;
@@ -233,7 +233,7 @@
                     }
                     cameras.push(camera);
                 }
-                camera.videodevice = device.device;
+                camera.videodevice = device.filepath;
                 camera.description = device.description;
                 camera.available = true;
             });

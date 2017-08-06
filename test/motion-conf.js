@@ -179,10 +179,10 @@
         mc.cameras.length.should.equal(1);
         should(mc.cameras[0].description).equal(undefined);
         mc.bindDevices([{
-            device: '/dev/video0',
+            filepath: '/dev/video0',
             description: 'redcamera',
         },{
-            device: '/dev/video2',
+            filepath: '/dev/video2',
             description: 'bluecamera',
         }]);
         mc.cameras.length.should.equal(2);

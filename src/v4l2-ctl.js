@@ -10,14 +10,14 @@
         constructor(options = {}) {
         }
 
-        describeDevice(devPath='/dev/video0') {
+        describeDevice(filepath='/dev/video0') {
             const that = this;
             return new Promise((resolve, reject) => {
                 // TODO use spawn() for performance
-                var result = spawnSync(`v4l2-ctl`, [`-d`, devPath, '--all', '--list-framesizes=MJPG']);
+                var result = spawnSync(`v4l2-ctl`, [`-d`, filepath, '--all', '--list-framesizes=MJPG']);
                 var stdout = result.stdout.toString().split('\n');
                 var device = {
-                    device: devPath,
+                    filepath,
                     framesizes: [],
                 };
                 var framesizes = {};
@@ -25,7 +25,7 @@
                     let icolon = line.indexOf(':');
                     if (line.match(/^\t\/dev/)) {
                         device.description = stdout[i-1];
-                        device.device = line.substr(1);
+                        device.filepath = line.substr(1);
                     } else if (line.match(/Size: Discrete/)) {
                         var tokens = line.split(' ');
                         var framesize = tokens[tokens.length-1];
@@ -91,10 +91,10 @@
                             }
                             return acc;
                         }, []);
-                        devices.sort((a,b) => a.device > b.device);
+                        devices.sort((a,b) => a.filepath > b.filepath);
                         for (var idev = 0; idev < devices.length; idev++) {
                             var device = devices[idev];
-                            var detail = yield that.describeDevice(device.device)
+                            var detail = yield that.describeDevice(device.filepath)
                                 .then(r=>async.next(r)).catch(e=>async.throw(e));
                             Object.assign(device, detail);
                         }
