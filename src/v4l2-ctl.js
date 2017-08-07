@@ -21,6 +21,7 @@
                     framesizes: [],
                 };
                 var framesizes = {};
+                var prevkey = "";
                 stdout.forEach((line, i) => {
                     let icolon = line.indexOf(':');
                     if (line.match(/^\t\/dev/)) {
@@ -40,6 +41,9 @@
                         var value = line.substr(icolon+1).trim();
                         if (value[0] === "'") {
                             value = value.substr(1, value.length-2);
+                        }
+                        if (key === 'default') {
+                            key = `${prevkey}_${key}`;
                         }
                         if (key === 'width/height') {
                             var wh = value.split('/');
@@ -66,6 +70,7 @@
                         } else {
                             device[key] = jsonValue(value);
                         }
+                        prevkey = key;
                     }
                 });
 
@@ -80,12 +85,12 @@
                     try {
                         var result = spawnSync(`v4l2-ctl`, [`--list-devices`]); // TODO use spawn() for performance
                         var stdout = result.stdout.toString().split('\n');
-                        var device = {device: 'undefined'};
+                        var device = {filepath: 'undefined'};
                         var devices = stdout.reduce((acc, line, i) => {
                             if (line.match(/^\t\/dev/)) {
                                 device = {
                                     signature: stdout[i-1],
-                                    device: line.substr(1),
+                                    filepath: line.substr(1),
                                 };
                                 acc.push(device);
                             }
@@ -99,7 +104,8 @@
                             Object.assign(device, detail);
                         }
 
-                        resolve(devices);
+                        var oDevices = devices.reduce((a,d) => ((a[d.filepath]=d),a), {});
+                        resolve(oDevices);
                         } catch (err) {
                         winston.error(err.stack);
                         reject(err);

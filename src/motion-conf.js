@@ -25,19 +25,19 @@
                 ffmpeg_cap_new: "on",
                 locate_motion_mode: "on",
                 logfile: path.join(this.confDir, "motion.log"),
-                max_movie_time: "60",
+                max_movie_time: 60,
                 output_pictures: "best",
                 output_debug_pictures: "off",
                 picture_type: "jpeg",
                 //process_id_file: path.join(this.confDir, `pid-${this.name}.txt`), // not used
-                quality: "100",
+                quality: 100,
                 stream_localhost: "on",
-                stream_maxrate: "10",
-                stream_quality: "75",
+                stream_maxrate: 10,
+                stream_quality: 75,
                 target_dir: motionDir,
                 webcontrol_html_output: "on",
                 webcontrol_localhost: "on",
-                webcontrol_port: "8090",
+                webcontrol_port: 8090,
             }, options.motion);
             var nCams = options.cameras && options.cameras.length || 1;
             var optionCams = options.cameras && options.cameras.length && options.cameras || [{}];
@@ -50,7 +50,7 @@
                     movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
                     picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
                     snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
-                    stream_port: `${i+1+Number(this.motion.webcontrol_port)}`,
+                    stream_port: i+1+this.motion.webcontrol_port,
                     target_dir: path.join(motionDir, `${cam}`),
                     text_left: `${cam}`,
                     videodevice: "/dev/video" + i,
@@ -214,8 +214,13 @@
 
         bindDevices(devices) {
             var cameras = this.cameras;
-            cameras.forEach(camera => (camera.available = false));
-            devices.forEach((device, i) => {
+            cameras.forEach((camera,i) => {
+                camera.stream_port = null;
+                camera.camera_id = i+1;
+            });
+            var devpaths = Object.keys(devices);
+            devpaths.forEach((dp, i) => {
+                var device = devices[dp];
                 var camera = cameras.filter(c => (c.signature === device.signature))[0];
                 camera = camera || cameras.filter(c => 
                     c.signature == null && c.videodevice === device.filepath)[0];
@@ -223,12 +228,11 @@
                     var icam = cameras.length;
                     var cam = `CAM${icam+1}`;
                     camera = {
-                        camera_id: `${icam+1}`,
+                        camera_id: icam+1,
                         input: "-1",
                         movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
                         picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
                         snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
-                        stream_port: `${icam+1+Number(this.motion.webcontrol_port)}`,
                         target_dir: path.join(motionDir, `${cam}`),
                         text_left: `${cam}`,
                     }
@@ -236,7 +240,8 @@
                 }
                 camera.videodevice = device.filepath;
                 camera.signature = device.signature;
-                camera.available = true;
+                camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
+                camera.name = camera.name || camera.signature;
             });
         }
        

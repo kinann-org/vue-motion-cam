@@ -63,7 +63,7 @@
                     var apiModel = res.body.apiModel;
                     apiModel.type.should.equal("MotionConf");
                     apiModel.version.should.equal("3.2");
-                    apiModel.motion.webcontrol_port.should.equal("8090");
+                    apiModel.motion.webcontrol_port.should.equal(8090);
                     apiModel.cameras[0].videodevice.should.equal("/dev/video0");
                     // returned apiModel should be default 
                     apiModel.rbHash.should.equal(rbh.hash(DEFAULT_CONF));
@@ -103,7 +103,7 @@
                     should.ok(apiModel);
                     apiModel.type.should.equal("MotionConf");
                     apiModel.version.should.equal("3.2");
-                    apiModel.motion.webcontrol_port.should.equal("8090");
+                    apiModel.motion.webcontrol_port.should.equal(8090);
                     apiModel.cameras[0].text_left.should.equal("CAM01");
                     apiModel.rbHash.should.equal(rbh.hash(newConf));
                     should.ok(apiModel);
@@ -204,15 +204,16 @@
                 var response = yield supertest(app).get("/test/devices").expect((res) => {
                     res.statusCode.should.equal(200);
                     var devices = res.body;
-                    devices.should.instanceOf(Array);
+                    var keys = Object.keys(devices);
+                    keys.length.should.above(0);
                     if (fs.existsSync('/dev/video0')) {
-                        devices[0].device.should.equal('/dev/video0');
+                        devices['/dev/video0'].filepath.should.equal('/dev/video0');
                         if (fs.existsSync('/dev/video1')) {
-                            devices[1].device.should.equal('/dev/video1');
+                            devices[1].filepath.should.equal('/dev/video1');
                         }
                     }
                     for (var i = 0; i < devices.length; i++) {
-                        devices[i].should.properties(['device', 'signature']);
+                        devices[i].should.properties(['filepath', 'signature']);
                     }
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
                 done();

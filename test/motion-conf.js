@@ -16,31 +16,31 @@
         ffmpeg_cap_new: "on",
         locate_motion_mode: "on",
         logfile: path.join(confDir, "motion.log"),
-        max_movie_time: "60",
+        max_movie_time: 60,
         output_pictures: "best",
         output_debug_pictures: "off",
         picture_type: "jpeg",
-        quality: "100",
+        quality: 100,
         //process_id_file: path.join(confDir, "pid-test.txt"),
         stream_localhost: "on",
-        stream_maxrate: "10",
-        stream_quality: "75",
+        stream_maxrate: 10,
+        stream_quality: 75,
         target_dir: path.join(appDir,".motion"),
-        webcontrol_port: "8090",
+        webcontrol_port: 8090,
         webcontrol_html_output: "on",
         webcontrol_localhost: "on",
     };
 
     it("constructor() creates configuration object", function() {
         var mc = new MotionConf({
-            version: "4",
+            version: 4,
         });
         should.ok(mc.motion);
         should.deepEqual(mc.motion, defaultMotion);
 
         var customMotion = Object.assign({}, defaultMotion, {
             motion: {
-                webcontrol_port: "9090",
+                webcontrol_port: 9090,
             },
         });
 
@@ -174,23 +174,79 @@
         }();
         async.next();
     });
-    it("bindDevices() binds current devices to saved cameras", function() {
-        var mc = new MotionConf();
-        mc.cameras.length.should.equal(1);
-        should(mc.cameras[0].signature).equal(undefined);
-        mc.bindDevices([{
-            filepath: '/dev/video0',
-            signature: 'redcamera',
-        },{
-            filepath: '/dev/video2',
-            signature: 'bluecamera',
-        }]);
-        mc.cameras.length.should.equal(2);
-        should(mc.cameras[0].signature).equal('redcamera');
-        should(mc.cameras[0].videodevice).equal('/dev/video0');
-        should(mc.cameras[0].available).equal(true);
-        should(mc.cameras[1].signature).equal('bluecamera');
-        should(mc.cameras[1].videodevice).equal('/dev/video2');
-        should(mc.cameras[1].available).equal(true);
+    it("TESTbindDevices() binds current devices to saved cameras", function() {
+        const webcontrol_port = 9100;
+        const mc = new MotionConf({
+            motion: { webcontrol_port },
+            cameras: [{
+                videodevice: '/dev/video0',
+                signature: 'bluecamera',
+                name: 'cam1',
+            },{
+                videodevice: '/dev/video0',
+                name: 'cam2',
+            },{
+                videodevice: '/dev/video9',
+                name: 'cam3',
+            }],
+        });
+        mc.motion.webcontrol_port.should.equal(webcontrol_port);
+        mc.cameras.length.should.equal(3);
+        should(mc.cameras[1].signature).equal(undefined);
+        const devices = {
+            '/dev/video0': {
+                filepath: '/dev/video0',
+                signature: 'redcamera',
+            },
+            '/dev/video1': {
+                filepath: '/dev/video1',
+                signature: 'bluecamera',
+            },
+            '/dev/video2': {
+                filepath: '/dev/video2',
+                signature: 'greencamera',
+            },
+        };
+        mc.bindDevices(devices);
+        // primary binding is on signature (e.g., 'bluecamera')
+        should(mc.cameras[0].signature).equal('bluecamera');
+        should(mc.cameras[0].videodevice).equal('/dev/video1');
+
+        // alternate binding is on filepath (e.g., '/dev/video0');
+        should(mc.cameras[1].signature).equal('redcamera');
+        should(mc.cameras[1].videodevice).equal('/dev/video0'); 
+
+        // unbound cameras have no stream_port
+        should(mc.cameras[2].signature).equal(undefined);
+        should(mc.cameras[2].videodevice).equal('/dev/video9');
+        should(mc.cameras[2].stream_port).equal(null);
+
+        // remaining devices are bound to new cameras
+        should(mc.cameras[3].signature).equal('greencamera');
+        should(mc.cameras[3].videodevice).equal('/dev/video2');
+
+        mc.cameras.length.should.equal(4);
+
+        // cameras are indexed from 1
+        should(mc.cameras[0].camera_id).equal(1);
+        should(mc.cameras[1].camera_id).equal(2);
+        should(mc.cameras[2].camera_id).equal(3);
+        should(mc.cameras[3].camera_id).equal(4);
+
+        // bindDevices does not change existing camera order
+        should(mc.cameras[0].name).equal('cam1');
+        should(mc.cameras[1].name).equal('cam2');
+        should(mc.cameras[2].name).equal('cam3');
+        should(mc.cameras[3].name).equal('greencamera'); // defaults from signature
+
+        // available cameras are assigned stream ports according to camera_id
+        for (var i = 0; i < mc.cameras.length; i++) {
+            var camera = mc.cameras[i];
+            if (i === 2) { // unavailable camera
+                should(camera.stream_port).equal(null);
+            } else { // available camera
+                should(camera.stream_port).equal(webcontrol_port + camera.camera_id);
+            }
+        }
     });
 })

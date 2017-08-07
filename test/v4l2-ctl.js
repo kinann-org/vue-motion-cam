@@ -3,17 +3,16 @@
     const winston = require("winston");
     const V4L2Ctl = require("../index").V4L2Ctl;
     
-    it("TESTlistDevices() returns JSON array describing devices", function(done) {
+    it("listDevices() returns JSON array describing devices", function(done) {
         var async = function* () {
             try {
                 const v4l2 = new V4L2Ctl();
                 var devices = yield v4l2.listDevices().then(r=>async.next(r)).catch(e=>async.throw(e));
-                devices.should.instanceOf(Array);
-                for (var i=0; i < devices.length; i++) {
-                    var dev = devices[i];
-                    winston.info('devices', devices);
-                    dev.should.properties(['device', 'signature', 'width', 'height']);
-                    dev.device.should.match(/\/dev\/video[0-9][0-9]*/);
+                var keys = Object.keys(devices);
+                for (var i=0; i < keys.length; i++) {
+                    var dev = devices[keys[i]];
+                    dev.should.properties(['filepath', 'signature', 'width', 'height', 'bounds_default']);
+                    dev.filepath.should.match(/\/dev\/video[0-9][0-9]*/);
                 }
                 done();
             } catch(err) {
