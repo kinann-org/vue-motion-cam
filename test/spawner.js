@@ -8,11 +8,11 @@
     const appdir = process.cwd();
     const logName = path.join(appdir, "spawner.log");
     
-    it("accepts a logger", function(done) {
+    it("accepts a logger or creates its own", function(done) {
         var async = function* () {
             try {
                 /// default logger
-                fs.existsSync(logName) && fs.unlink(logName);
+                fs.existsSync(logName) && fs.unlinkSync(logName);
                 var ss = new Spawner({
                     stdOutFilter: (line) => 
                         line.match(/hello/) 
@@ -20,11 +20,11 @@
                         : Spawner.LINE_REJECT,
                 });
                 should.ok(ss.logger == null);
+                should.ok(!fs.existsSync(logName));
                 var result = yield ss.spawn(['echo','hello']).then(r=>async.next(r)).catch(r=>async.next(r));
                 result.should.instanceOf(ChildProcess);
                 ss.logger.should.instanceOf(winston.Logger);
-                var exists = yield setTimeout(()=>fs.existsSync(logName) ? async.next(true) : async.next(false), 200);
-                should.ok(exists);
+                should.ok(fs.existsSync(logName));
 
                 // injected logger
                 var ss2 = new Spawner({

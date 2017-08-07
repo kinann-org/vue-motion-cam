@@ -248,5 +248,35 @@
                 should(camera.stream_port).equal(webcontrol_port + camera.camera_id);
             }
         }
+
+        // if devices don't change, re-binding is harmless
+        const oldCameras = JSON.parse(JSON.stringify(mc.cameras));
+        mc.bindDevices(devices);
+        should.deepEqual(mc.cameras, oldCameras);
+
+        // if a new device is added, existing bindings don't change
+        const newDevices = JSON.parse(JSON.stringify(devices));
+        newDevices['/dev/video3'] = {
+            filepath: '/dev/video3',
+            signature: 'yellowcamera',
+        };
+        mc.bindDevices(newDevices);
+        for (var i=0; i<oldCameras.length; i++) {
+            should.deepEqual(mc.cameras[i], oldCameras[i]);
+        };
+
+        // if a device becomes inactive, only that cameras binding changes
+        const delDevices = JSON.parse(JSON.stringify(devices));
+        delete delDevices['/dev/video0'];
+        mc.bindDevices(delDevices);
+        for (var i=0; i<oldCameras.length; i++) {
+            if (mc.cameras[i].signature === 'redcamera') {
+                should.deepEqual(mc.cameras[i], Object.assign({}, oldCameras[i], {
+                    stream_port: null, // inactive device
+                }));
+            } else {
+                should.deepEqual(mc.cameras[i], oldCameras[i]);
+            }
+        };
     });
 })

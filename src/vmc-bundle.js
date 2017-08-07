@@ -22,7 +22,7 @@
                 ]),
             });
             this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
-            this.motionConf = new MotionConf({
+            this.updateMotionConf({
                 name: this.name,
             });
             this.options = Object.assign({}, options);
@@ -30,10 +30,14 @@
         }
 
         updateMotionConf(conf) {
-            var conf = Object.assign({}, conf, {
+            var defaultConf = {
                 name: this.name,
-            });
-            this.motionConf = new MotionConf(conf);
+            };
+            if (conf) {
+                var conf = Object.assign({}, conf, defaultConf);
+                this.motionConf = new MotionConf(conf);
+            }
+            return this.motionConf = this.motionConf || new MotionConf(defaultConf);
         }
 
         loadApiModel(filePath) {
@@ -42,10 +46,9 @@
                     .then(model => {
                         try {
                             if (model) {
-                                this.updateMotionConf(model);
-                                resolve(model);
+                                resolve(this.updateMotionConf(model));
                             } else if (filePath === this.apiFile) {
-                                resolve(this.motionConf.toJSON());
+                                resolve(this.updateMotionConf().toJSON());
                             } else {
                                 throw new Error("unknown api model:" + filePath);
                             }
