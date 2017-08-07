@@ -12,7 +12,7 @@
                 for (var i=0; i < devices.length; i++) {
                     var dev = devices[i];
                     winston.info('devices', devices);
-                    dev.should.properties(['device', 'description', 'width', 'height']);
+                    dev.should.properties(['device', 'signature', 'width', 'height']);
                     dev.device.should.match(/\/dev\/video[0-9][0-9]*/);
                 }
                 done();

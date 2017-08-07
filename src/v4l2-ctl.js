@@ -24,7 +24,7 @@
                 stdout.forEach((line, i) => {
                     let icolon = line.indexOf(':');
                     if (line.match(/^\t\/dev/)) {
-                        device.description = stdout[i-1];
+                        device.signature = stdout[i-1];
                         device.filepath = line.substr(1);
                     } else if (line.match(/Size: Discrete/)) {
                         var tokens = line.split(' ');
@@ -84,7 +84,7 @@
                         var devices = stdout.reduce((acc, line, i) => {
                             if (line.match(/^\t\/dev/)) {
                                 device = {
-                                    description: stdout[i-1],
+                                    signature: stdout[i-1],
                                     device: line.substr(1),
                                 };
                                 acc.push(device);

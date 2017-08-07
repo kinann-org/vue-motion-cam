@@ -22,7 +22,7 @@
                         <v-list-tile v-for="(device,i) in rbService.devices" :key="i">
                             <v-list-tile-content>
                                 <v-list-tile-title>{{device.device}}</v-list-tile-title>
-                                <v-list-tile-sub-title>{{device.description}}</v-list-tile-sub-title>
+                                <v-list-tile-sub-title>{{device.signature}}</v-list-tile-sub-title>
                             </v-list-tile-content>
                         </v-list-tile>
                     </v-list>

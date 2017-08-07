@@ -212,7 +212,7 @@
                         }
                     }
                     for (var i = 0; i < devices.length; i++) {
-                        devices[i].should.properties(['device', 'description']);
+                        devices[i].should.properties(['device', 'signature']);
                     }
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
                 done();

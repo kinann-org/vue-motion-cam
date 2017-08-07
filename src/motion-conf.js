@@ -216,7 +216,7 @@
             var cameras = this.cameras;
             cameras.forEach(camera => (camera.available = false));
             devices.forEach((device, i) => {
-                var camera = cameras.filter(camera => (camera.description === device.description))[0];
+                var camera = cameras.filter(camera => (camera.signature === device.signature))[0];
                 camera = camera || cameras.filter(camera => (camera.videodevice === device.filepath))[0];
                 if (camera == null) { // not found
                     var icam = cameras.length;
@@ -234,7 +234,7 @@
                     cameras.push(camera);
                 }
                 camera.videodevice = device.filepath;
-                camera.description = device.description;
+                camera.signature = device.signature;
                 camera.available = true;
             });
         }
