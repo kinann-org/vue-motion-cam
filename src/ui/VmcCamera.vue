@@ -76,7 +76,7 @@ export default {
     },
     created() {
         this.$http.get([this.restOrigin(),this.service,"devices"].join("/"));
-        this.restBundleModel();
+        this.restBundleResource();
         this.rbDispatch("apiLoad");
     },
     mounted() {
