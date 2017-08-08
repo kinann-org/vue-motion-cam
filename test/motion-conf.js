@@ -174,20 +174,20 @@
         }();
         async.next();
     });
-    it("TESTbindDevices() binds current devices to saved cameras", function() {
+    it("bindDevices() binds current devices to saved cameras", function() {
         const webcontrol_port = 9100;
         const mc = new MotionConf({
             motion: { webcontrol_port },
             cameras: [{
                 videodevice: '/dev/video0',
                 signature: 'bluecamera',
-                name: 'cam1',
+                name: 'mycam1',
             },{
                 videodevice: '/dev/video0',
-                name: 'cam2',
+                name: 'mycam2',
             },{
                 videodevice: '/dev/video9',
-                name: 'cam3',
+                name: 'mycam3',
             }],
         });
         mc.motion.webcontrol_port.should.equal(webcontrol_port);
@@ -234,10 +234,10 @@
         should(mc.cameras[3].camera_id).equal(4);
 
         // bindDevices does not change existing camera order
-        should(mc.cameras[0].name).equal('cam1');
-        should(mc.cameras[1].name).equal('cam2');
-        should(mc.cameras[2].name).equal('cam3');
-        should(mc.cameras[3].name).equal('greencamera'); // defaults from signature
+        should(mc.cameras[0].name).equal('mycam1');
+        should(mc.cameras[1].name).equal('mycam2');
+        should(mc.cameras[2].name).equal('mycam3');
+        should(mc.cameras[3].name).equal('CAM4'); // auto-generated
 
         // available cameras are assigned stream ports according to camera_id
         for (var i = 0; i < mc.cameras.length; i++) {
@@ -265,14 +265,14 @@
             should.deepEqual(mc.cameras[i], oldCameras[i]);
         };
 
-        // if a device becomes inactive, only that cameras binding changes
+        // if a device becomes inactive, only camera bound to the device is affected
         const delDevices = JSON.parse(JSON.stringify(devices));
         delete delDevices['/dev/video0'];
         mc.bindDevices(delDevices);
         for (var i=0; i<oldCameras.length; i++) {
             if (mc.cameras[i].signature === 'redcamera') {
                 should.deepEqual(mc.cameras[i], Object.assign({}, oldCameras[i], {
-                    stream_port: null, // inactive device
+                    stream_port: null, // set to null because of inactive device
                 }));
             } else {
                 should.deepEqual(mc.cameras[i], oldCameras[i]);

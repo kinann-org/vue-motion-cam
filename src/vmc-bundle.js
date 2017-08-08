@@ -30,14 +30,21 @@
         }
 
         updateMotionConf(conf) {
-            var defaultConf = {
-                name: this.name,
-            };
-            if (conf) {
-                var conf = Object.assign({}, conf, defaultConf);
-                this.motionConf = new MotionConf(conf);
-            }
-            return this.motionConf = this.motionConf || new MotionConf(defaultConf);
+            return new Promise((resolve, reject) => {
+                var defaultConf = {
+                    name: this.name,
+                };
+                if (conf) {
+                    var conf = Object.assign({}, conf, defaultConf);
+                    this.motionConf = new MotionConf(conf);
+                }
+                this.motionConf = this.motionConf || new MotionConf(defaultConf);
+                new V4L2Ctl().listDevices().then(devices => {
+                    this.devices = devices;
+                    this.motionConf.bindDevices(devices);
+                    resolve( this.motionConf );
+                }).catch(e => reject(e));
+            });
         }
 
         loadApiModel(filePath) {
@@ -46,9 +53,9 @@
                     .then(model => {
                         try {
                             if (model) {
-                                resolve(this.updateMotionConf(model));
+                                this.updateMotionConf(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                             } else if (filePath === this.apiFile) {
-                                resolve(this.updateMotionConf().toJSON());
+                                this.updateMotionConf().then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                             } else {
                                 throw new Error("unknown api model:" + filePath);
                             }
@@ -66,10 +73,10 @@
                 super.saveApiModel(model, filePath)
                     .then(res => {
                         try {
-                            if (filePath === this.apiFile) {
-                                this.updateMotionConf(model);
+                            if (filePath !== this.apiFile) {
+                                throw new Error(`filePath expected:${this.apiFile} actual:${filePath}`);
                             }
-                            resolve(res);
+                            this.updateMotionConf(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                         } catch (err) { // implementation error
                             winston.error(err.message, err.stack);
                             reject(err);
@@ -94,11 +101,12 @@
 
         postCameraStart(req, res, next) {
             return new Promise((resolve, reject) => {
-                this.motionConf.startCamera()
-                .then(process => resolve({
-                    status: `camera started`,
-                }))
-                .catch(err => {
+                this.motionConf.startCamera().then(process => {
+                    this.streaming = true;
+                    resolve({
+                        status: `camera streaming active`,
+                    });
+                }).catch(err => {
                     winston.error(err.stack);
                     reject(err);
                 });
@@ -108,16 +116,22 @@
         postCameraStop(req, res, next) {
             return new Promise((resolve, reject) => {
                 this.motionConf.stopCamera()
-                .then(response => resolve({
-                    status: `camera stopped`,
-                }))
-                .catch(err => reject(err));
+                .then(response => {
+                    this.streaming = false;
+                    resolve({
+                        status: `camera streaming stopped`,
+                    });
+                }).catch(err => {
+                    winston.error(err.stack);
+                    reject(err);
+                });
             });
         }
 
         getState() {
             return {
                 api: 'vmc-bundle',
+                streaming: this.streaming,
                 devices: this.devices,
             };
         }

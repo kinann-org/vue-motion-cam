@@ -1,5 +1,5 @@
 (function(exports) {
-    const { spawn } = require('child_process');
+    const { execSync, spawn } = require('child_process');
     const winston = require('winston');
     const srcPkg = require("../package.json");
     const fs = require("fs");
@@ -45,8 +45,8 @@
             this.cameras = cameras.map((cam, i) => {
                 var cam = `CAM${i+1}`;
                 return Object.assign({
-                    camera_id: `${i+1}`,
-                    input: "-1",
+                    camera_id: i+1,
+                    input: -1,
                     movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
                     picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
                     snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
@@ -70,7 +70,7 @@
                 return "";
             }
             if (this.version === "3.2") {
-                if (key === "input" && value === "-1") {
+                if (key === "input" && value === -1) {
                     // do nothing (3.2 does not like -1);
                 } else if (props3_2[key]) {
                     conf += `${props3_2[key]}\t${value}\n`;
@@ -99,7 +99,10 @@
 
         motionConf(confPath = motionDir) {
             var conf = this.confToString(this.motion);
-            this.cameras.forEach((key, i) => {
+            this.cameras.forEach((c, i) => {
+                if (c.stream_port == null) {
+                    conf += '# UNAVAILABLE ';
+                }
                 conf += this.confKeyValueString("camera", this.cameraPath(i, confPath));
             });
             return conf;
@@ -171,15 +174,20 @@
 
         _lineFilter(line) {
             if (line.match(/Problem enabling stream server/)) {
+                this.nErrors++;
                 return Spawner.LINE_REJECT;
             } else if (line.match(/Failed to open video device/)) {
+                this.nErrors++;
                 return Spawner.LINE_REJECT;
             } else if (line.match(/Error selecting input/)) {
                 return Spawner.LINE_REJECT;
             } else if (line.match(/Started stream/)) {
                 this.status = this.STATUS_OPEN;
                 this.statusText = line;
-                return Spawner.LINE_RESOLVE;
+                this.nStreams++;
+                var nExpected = this.cameras.reduce((a,c) => (c.stream_port ? a+1:a), 0);
+                winston.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
+                return nExpected === this.nStreams ? Spawner.LINE_RESOLVE : Spawner.LINE_INFO;
             } else {
                 return Spawner.LINE_INFO;
             }
@@ -191,9 +199,7 @@
             if (that.process && that.status === that.STATUS_OPEN) {
                 const pid = that.process.pid;
                 try {
-                console.log("verifying pid", pid);
                     process.kill(pid, 0);
-                console.log("verifying pid", "active");
                     var err = new Error(`${that.name} camera is already open`);
                     return Promise.reject(err);
                 } catch (err) {
@@ -202,13 +208,27 @@
                 }
             }
             that.status = that.STATUS_UNKNOWN;
+            that.nStreams = 0;
             return that.spawner.spawn(cmd);
         }
 
         stopCamera() {
             if (this.spawner.process == null) {
-                return Promise.reject(new Error(`${this.name} camera is not active`));
+                return new Promise((resolve, reject) => {
+                    try {
+                        execSync('pkill -f "^motion -c"');
+                        resolve({
+                            status: "kill signal sent",
+                        });
+                    } catch (err) {
+                        winston.error(err.stack);
+                        resolve({
+                            status: "camera streaming is not active",
+                        });
+                    }
+                });
             }
+
             return this.spawner.kill();
         }
 
@@ -229,7 +249,7 @@
                     var cam = `CAM${icam+1}`;
                     camera = {
                         camera_id: icam+1,
-                        input: "-1",
+                        input: -1,
                         movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
                         picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
                         snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
@@ -241,10 +261,9 @@
                 camera.videodevice = device.filepath;
                 camera.signature = device.signature;
                 camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
-                camera.name = camera.name || camera.signature;
+                camera.name = camera.name || `CAM${camera.camera_id}`;
             });
         }
-       
 
     } // class MotionConf
 
