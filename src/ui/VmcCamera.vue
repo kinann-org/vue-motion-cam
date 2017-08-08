@@ -8,16 +8,10 @@
         <rb-about-item name="service" value="test" slot="prop">RestBundle name</rb-about-item>
     </rb-about>
 
-    <v-card hover>
-        <v-toolbar dense flat class="grey lighten-3">
-            <v-toolbar-title> vmc-camera </v-toolbar-title>
-            <v-spacer/>
-            <v-btn flat @click="startCamera()" >Start</v-btn>
-            <v-btn flat @click="stopCamera()">stop</v-btn>
-        </v-toolbar>
+    <v-card flat hover>
         <v-card-text>
-            <v-layout>
-                <v-flex v-for="(camera,i) in cameras" :key="i">
+            <v-layout row wrap>
+                <v-flex v-for="(camera,i) in cameras" :key="i" sm4 @click='clickCamera(camera)'>
                     <div>{{camera.name}}:{{camera.stream_port}}@{{camera.videodevice}}</div>
                     <img v-if='rbService.streaming && camera.stream_port' :src="camera.url" height="120px"/>
                     <v-toolbar flat dense v-if='!rbService.streaming && camera.stream_port'
@@ -35,6 +29,10 @@
             {{cameras}}
             -->
         </v-card-text>
+        <v-card-actions >
+            <v-btn flat @click="startCamera()" >Start</v-btn>
+            <v-btn flat @click="stopCamera()">stop</v-btn>
+        </v-card-actions>
         <v-system-bar v-if='httpErr' 
             v-tooltip:above='{html:`${httpErr.config.url} \u2794 HTTP${httpErr.response.status} ${httpErr.response.statusText}`}'
             class='error' dark>
@@ -69,6 +67,9 @@ export default {
         }
     },
     methods: {
+        clickCamera(camera) {
+            console.log("clickCamera", camera.name);
+        },
         refreshCameras() {
             var rnd = Math.random();
             this.cameras.forEach(camera => {
