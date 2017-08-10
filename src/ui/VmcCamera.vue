@@ -9,30 +9,75 @@
     </rb-about>
 
     <v-card flat hover>
+    {{fab}}
         <v-card-text>
-            <v-layout row wrap>
-                <v-flex v-for="(camera,i) in cameras" :key="i" sm4 @click='clickCamera(camera)'>
-                    <div>{{camera.name}}:{{camera.stream_port}}@{{camera.videodevice}}</div>
-                    <img v-if='rbService.streaming && camera.stream_port' :src="camera.url" height="120px"/>
-                    <v-toolbar flat dense v-if='!rbService.streaming && camera.stream_port'
-                        class='grey lighten-1 text-xs-center'>
-                        <v-toolbar-title class="text-xs-center white--text"><v-icon>visibility_off</v-icon></v-toolbar-title>
-                    </v-toolbar>
-                    <v-toolbar flat dense v-if='camera.stream_port == null' 
-                        class='grey lighten-1 text-xs-center'>
-                        <v-toolbar-title class="text-xs-center white--text">No device</v-toolbar-title>
-                    </v-toolbar>
+            <v-layout wrap row>
+                <v-flex class='grey' xs1 style="border-top-left-radius:10px; border-bottom-left-radius:10px;">
+                    <v-btn dark flat icon @click="toggleCamera()" >
+                        <v-icon v-show="streaming === false">videocam</v-icon>
+                        <v-icon v-show="streaming === true" class="white--text"
+                            style="border: 1pt solid red; border-radius: 5px;"
+                            >videocam_off</v-icon>
+                        <v-icon v-show="streaming == null" >hourglass_full</v-icon>
+                    </v-btn>
+                    <v-btn dark flat icon @click="zoomCamera()" >
+                        <v-icon >zoom_in</v-icon>
+                    </v-btn>
                 </v-flex>
+                <v-flex v-for="(camera,i) in cameras" :key="i" class='grey ' >
+                    <div style='position:relative;' >
+                        <v-layout row >
+                            <v-flex xs-2 offset-xs2 class="white--text pt-1 pb-1">{{camera.name}}</v-flex>
+                            <v-speed-dial v-model="fab" direction='bottom' 
+                                absolute
+                                transition="slide-y-reverse-transition"
+                                style='z-index:999; left: -13px; top: -8px;'
+                            >
+                                <v-btn v-model='fab' slot='activator' 
+                                    small flat dark fab
+                                    @click.stop='clickFab(camera)'
+                                    class='grey'
+                                >
+                                    <v-icon>menu</v-icon>
+                                    <v-icon>close</v-icon>
+                                </v-btn>
+                              <v-btn fab dark small class="green" >
+                                <v-icon>edit</v-icon>
+                              </v-btn>
+                              <v-btn fab dark small class="indigo" >
+                                <v-icon>add</v-icon>
+                              </v-btn>
+                              <v-btn fab dark small class="red" >
+                                <v-icon>delete</v-icon>
+                              </v-btn>
+                            </v-speed-dial>
+                        </v-layout>
+                    </div>
+                    <v-layout @click='clickCamera(camera)' >
+                        <div class="grey" style="padding:0; margin:0; padding-bottom:2pt; ">
+                            <img v-if='streaming && camera.stream_port' :src="camera.url" :height="imgHeight"
+                                @click='clickCamera(camera)' />
+                            <div v-if='!streaming || camera.stream_port==null'
+                                :style='`height:${imgHeight};width:${imgWidth}`'
+                                dark class='title grey lighten-1 text-xs-center pt-4'>
+                                <span v-if='!streaming && camera.stream_port'
+                                    class="text-xs-center white--text"><v-icon>visibility_off</v-icon></span>
+                                <span v-if='camera.stream_port == null'
+                                    class="text-xs-center white--text">No device</span>
+                            </div>
+
+                        </div>
+                    </v-layout>
+                </v-flex>
+                <div class='grey' style="border-top-right-radius:10px; border-bottom-right-radius:10px; width:10px">
+                &nbsp;
+                </div>
             </v-layout>
             <!--
             <rb-tree-view :data="rbService" :rootKey="service"/>
             {{cameras}}
             -->
         </v-card-text>
-        <v-card-actions >
-            <v-btn flat @click="startCamera()" >Start</v-btn>
-            <v-btn flat @click="stopCamera()">stop</v-btn>
-        </v-card-actions>
         <v-system-bar v-if='httpErr' 
             v-tooltip:above='{html:`${httpErr.config.url} \u2794 HTTP${httpErr.response.status} ${httpErr.response.statusText}`}'
             class='error' dark>
@@ -59,7 +104,10 @@ export default {
     data: function() {
         return {
             apiSvc: this,
+            imageScales: [0.25,0.5,1],
+            scaleIndex: 0,
             startCount: 0,
+            fab: false,
             apiRules: {
                 required: (value) => !!value || 'Required',
                 gt0: (value) => Number(value) > 0 || 'Positive number',
@@ -67,6 +115,13 @@ export default {
         }
     },
     methods: {
+        zoomCamera() {
+            this.scaleIndex = (1+this.scaleIndex) % this.imageScales.length;
+        },
+        clickFab(camera) {
+            Vue.set(this, 'fab', !this.fab);
+            console.log('clickFab', this.fab);
+        },
         clickCamera(camera) {
             console.log("clickCamera", camera.name);
         },
@@ -76,10 +131,20 @@ export default {
                 Vue.set(camera, 'url', `http://localhost:${camera.stream_port}/?r=${rnd}`);
             });
         },
+        toggleCamera() {
+            var newStream = this.streaming ? false : true;
+            this.rbService.streaming = null;
+            if (newStream) {
+                var promise = this.startCamera();
+            } else {
+                var promise = this.stopCamera();
+            }
+            promise.then(r => (this.rbService.streaming = newStream));
+        },
         startCamera() {
             var url = [this.restOrigin(),this.service,"camera", "start"].join("/");
             Vue.set(this.rbResource, 'httpErr', null);
-            this.$http.post(url, "nodata").then(r => {
+            return this.$http.post(url, "nodata").then(r => {
                 console.log(`HTTP${r.status}`, JSON.stringify(r.data));
                 this.refreshCameras();
                 return r;
@@ -90,7 +155,7 @@ export default {
         stopCamera() {
             var url = [this.restOrigin(),this.service,"camera", "stop"].join("/");
             Vue.set(this.rbResource, 'httpErr', null);
-            this.$http.post(url, "nodata").then(r => {
+            return this.$http.post(url, "nodata").then(r => {
                 console.log(`HTTP${r.status}`, JSON.stringify(r.data));
                 return r;
             }).catch(err => {
@@ -99,6 +164,18 @@ export default {
         },
     },
     computed: {
+        imgHeight() {
+            return `${this.imageScales[this.scaleIndex] * 480}px`;
+        },
+        imgWidth() {
+            return `${this.imageScales[this.scaleIndex] * 640}px`;
+        },
+        cameraIcon() {
+            return this.streaming ? 'videocam_off' : 'videocam';
+        },
+        streaming() {
+            return this.rbService.streaming;
+        },
         httpErr() {
             return this.rbResource.httpErr;
         },
