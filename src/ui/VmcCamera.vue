@@ -9,75 +9,68 @@
     </rb-about>
 
     <v-card flat hover>
-    {{fab}}
         <v-card-text>
-            <v-layout wrap row>
-                <v-flex class='grey' xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
-                    <v-btn dark flat icon @click="toggleCamera()" >
-                        <v-icon v-show="streaming === false">videocam</v-icon>
-                        <v-icon v-show="streaming === true" class="white--text"
-                            style="border: 1pt solid red; border-radius: 7px;"
-                            >videocam_off</v-icon>
-                        <v-icon v-show="streaming == null" >hourglass_full</v-icon>
-                    </v-btn>
-                    <v-btn dark flat icon @click="zoomCamera()" >
-                        <v-icon >zoom_in</v-icon>
-                    </v-btn>
-                </v-flex>
-                <div v-for="(camera,i) in cameras" :key="i" class='vmc-feed ' >
-                    <div style='position:relative;' >
-                        <v-layout row >
-                            <v-flex xs-2 offset-xs2 class="white--text pt-1 pb-1">{{camera.name}}</v-flex>
-                            <v-speed-dial v-model="fab" direction='bottom' 
-                                absolute
-                                transition="slide-y-reverse-transition"
-                                style='z-index:999; left: -13px; top: -8px;'
-                            >
-                                <v-btn v-model='fab' slot='activator' 
-                                    small flat dark fab
-                                    @click.stop='clickFab(camera)'
-                                    class='grey'
-                                >
-                                    <v-icon>menu</v-icon>
-                                    <v-icon>close</v-icon>
-                                </v-btn>
-                              <v-btn fab dark small class="green" >
-                                <v-icon>edit</v-icon>
-                              </v-btn>
-                              <v-btn fab dark small class="indigo" >
-                                <v-icon>add</v-icon>
-                              </v-btn>
-                              <v-btn fab dark small class="red" >
-                                <v-icon>delete</v-icon>
-                              </v-btn>
-                            </v-speed-dial>
-                        </v-layout>
+            <div class="vmc-frame">
+                <div class="vmc-container">
+                    <div class="vmc-commands" xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
+                        <v-btn light flat icon @click="toggleCamera()" >
+                            <v-icon v-show="streaming === false" >videocam</v-icon>
+                            <v-icon v-show="streaming === true" 
+                                style="border: 1pt solid red; border-radius: 7px;"
+                                >videocam_off</v-icon>
+                            <v-icon v-show="streaming == null" >hourglass_full</v-icon>
+                        </v-btn>
+                        <v-btn light flat icon @click="zoomCamera()" >
+                            <v-icon >zoom_in</v-icon>
+                        </v-btn>
                     </div>
-                    <v-layout @click='clickCamera(camera)' >
-                        <div class="green" >
+                    <div v-for="(camera,i) in cameras" :key="i" class='vmc-feed ' >
+                        <div class="vmc-feed-actions">
+                                <div xs-2 offset-xs2 class="pl-1 pt-1 pb-0">{{camera.name}}</div>
+                                <div @click.stop='clickFab(camera,i)' >
+                                    <v-icon v-if="!fab[i]">menu</v-icon>
+                                    <v-icon v-if="fab[i]">close</v-icon>
+                                </div>
+                                <v-speed-dial v-model="fab[i]" direction='bottom' 
+                                    absolute
+                                    transition="slide-y-reverse-transition"
+                                    style='z-index:999; right: 12px; top: 25px;'
+                                >
+                                    <v-btn fab dark small class="green" @click='editCamera(camera)' >
+                                        <v-icon>edit</v-icon>
+                                    </v-btn>
+                                    <v-btn fab dark small class="indigo" >
+                                        <v-icon>add</v-icon>
+                                    </v-btn>
+                                    <v-btn fab dark small class="red" >
+                                        <v-icon>delete</v-icon>
+                                    </v-btn>
+                                </v-speed-dial>
+                        </div>
+                        <div @click='clickCamera(camera)' 
+                            :style='`height:${imgHeight};width:${imgWidth}`'
+                        >
                             <img v-if='streaming && camera.stream_port' :src="camera.url" 
                                 :style='`height:${imgHeight};width:${imgWidth}`'
-                                @click='clickCamera(camera)' />
+                                />
                             <div v-if='!streaming || camera.stream_port==null'
-                                :style='`height:${imgHeight};width:${imgWidth}`'
-                                dark class='title grey lighten-1 text-xs-center pt-4'>
-                                <span v-if='!streaming && camera.stream_port'
-                                    class="text-xs-center white--text"><v-icon>visibility_off</v-icon></span>
-                                <span v-if='camera.stream_port == null'
-                                    class="text-xs-center white--text">No device</span>
+                                :style='`height:${imgHeight};width:${imgWidth};`'
+                                dark class='vmc-img-placeholder'
+                                >
+                                <div v-if='!streaming && camera.stream_port'
+                                    ><v-icon>visibility_off</v-icon></div>
+                                <div v-if='camera.stream_port == null'
+                                    >No device</div>
                             </div>
 
                         </div>
-                    </v-layout>
-                </div>
-                <div class='grey' style="border-top-right-radius:7px; border-bottom-right-radius:7px; width:7px">
-                &nbsp;
-                </div>
-            </v-layout>
+                    </div>
+                </div> <!-- vmc-container -->
             <!--
             <rb-tree-view :data="rbService" :rootKey="service"/>
             {{cameras}}
             -->
+            </div> <!-- vmc-frame -->
         </v-card-text>
         <v-system-bar v-if='httpErr' 
             v-tooltip:above='{html:`${httpErr.config.url} \u2794 HTTP${httpErr.response.status} ${httpErr.response.statusText}`}'
@@ -108,7 +101,7 @@ export default {
             imageScales: [0.25,0.5,1],
             scaleIndex: 0,
             startCount: 0,
-            fab: false,
+            fab: [false, false],
             apiRules: {
                 required: (value) => !!value || 'Required',
                 gt0: (value) => Number(value) > 0 || 'Positive number',
@@ -116,12 +109,14 @@ export default {
         }
     },
     methods: {
+        editCamera(camera) {
+            console.log('edit', camera.name);
+        },
         zoomCamera() {
             this.scaleIndex = (1+this.scaleIndex) % this.imageScales.length;
         },
-        clickFab(camera) {
-            Vue.set(this, 'fab', !this.fab);
-            console.log('clickFab', this.fab);
+        clickFab(camera,i) {
+            Vue.set(this, 'fab', this.fab.map((v,iv)=>iv === i ? !v : v));
         },
         clickCamera(camera) {
             console.log("clickCamera", camera.name);
@@ -203,7 +198,38 @@ export default {
 
 </script>
 <style> 
+.vmc-frame {
+    display: inline-block;
+}
+.vmc-container {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: #e8e8e8;
+    border-radius: 7px;
+}
+.vmc-commands {
+    display: flex;
+    flex-direction: column;
+}
 .vmc-feed {
-    border: 2pt solid red;
+    box-sizing: content-box;
+    border-right: 7px solid #e8e8e8;
+    border-bottom: 7px solid #e8e8e8;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+.vmc-feed-actions {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+}
+.vmc-feed-menu {
+    background-color: red;
+}
+.vmc-img-placeholder {
+    display: flex;
+    background-color: lightgrey;
+    align-items: center;
+    justify-content: center;
 }
 </style>

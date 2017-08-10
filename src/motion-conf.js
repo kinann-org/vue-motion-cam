@@ -232,6 +232,8 @@
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,
                 videodevice: `/dev/video${id-1}`,
+                width: 640,
+                height: 480,
             }
         }
 
