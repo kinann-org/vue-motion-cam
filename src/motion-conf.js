@@ -218,18 +218,31 @@
                     try {
                         execSync('pkill -f "^motion -c"');
                         resolve({
-                            status: "kill signal sent",
+                            status: "camera streaming is shutting down",
                         });
                     } catch (err) {
-                        winston.error(err.stack);
+                        winston.info(err.stack);
                         resolve({
-                            status: "camera streaming is not active",
+                            status: "camera streaming is off",
                         });
                     }
                 });
             }
 
             return this.spawner.kill();
+        }
+
+        defaultCamera(id) {
+            var cam = `CAM${id}`;
+            return {
+                camera_id: id,
+                input: -1,
+                movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
+                picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
+                snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
+                target_dir: path.join(motionDir, `${cam}`),
+                text_left: `${cam}`,
+            }
         }
 
         bindDevices(devices) {

@@ -12,11 +12,11 @@
     {{fab}}
         <v-card-text>
             <v-layout wrap row>
-                <v-flex class='grey' xs1 style="border-top-left-radius:10px; border-bottom-left-radius:10px;">
+                <v-flex class='grey' xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
                     <v-btn dark flat icon @click="toggleCamera()" >
                         <v-icon v-show="streaming === false">videocam</v-icon>
                         <v-icon v-show="streaming === true" class="white--text"
-                            style="border: 1pt solid red; border-radius: 5px;"
+                            style="border: 1pt solid red; border-radius: 7px;"
                             >videocam_off</v-icon>
                         <v-icon v-show="streaming == null" >hourglass_full</v-icon>
                     </v-btn>
@@ -24,7 +24,7 @@
                         <v-icon >zoom_in</v-icon>
                     </v-btn>
                 </v-flex>
-                <v-flex v-for="(camera,i) in cameras" :key="i" class='grey ' >
+                <div v-for="(camera,i) in cameras" :key="i" class='vmc-feed ' >
                     <div style='position:relative;' >
                         <v-layout row >
                             <v-flex xs-2 offset-xs2 class="white--text pt-1 pb-1">{{camera.name}}</v-flex>
@@ -54,8 +54,9 @@
                         </v-layout>
                     </div>
                     <v-layout @click='clickCamera(camera)' >
-                        <div class="grey" style="padding:0; margin:0; padding-bottom:2pt; ">
-                            <img v-if='streaming && camera.stream_port' :src="camera.url" :height="imgHeight"
+                        <div class="green" >
+                            <img v-if='streaming && camera.stream_port' :src="camera.url" 
+                                :style='`height:${imgHeight};width:${imgWidth}`'
                                 @click='clickCamera(camera)' />
                             <div v-if='!streaming || camera.stream_port==null'
                                 :style='`height:${imgHeight};width:${imgWidth}`'
@@ -68,8 +69,8 @@
 
                         </div>
                     </v-layout>
-                </v-flex>
-                <div class='grey' style="border-top-right-radius:10px; border-bottom-right-radius:10px; width:10px">
+                </div>
+                <div class='grey' style="border-top-right-radius:7px; border-bottom-right-radius:7px; width:7px">
                 &nbsp;
                 </div>
             </v-layout>
@@ -202,7 +203,7 @@ export default {
 
 </script>
 <style> 
-.selectedDrive {
-    border: 2pt solid #fb8c00;
+.vmc-feed {
+    border: 2pt solid red;
 }
 </style>

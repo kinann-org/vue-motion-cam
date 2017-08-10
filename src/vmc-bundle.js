@@ -104,7 +104,7 @@
                 this.motionConf.startCamera().then(process => {
                     this.streaming = true;
                     resolve({
-                        status: `camera streaming active`,
+                        status: `camera streaming is on`,
                     });
                 }).catch(err => {
                     winston.error(err.stack);
@@ -119,7 +119,7 @@
                 .then(response => {
                     this.streaming = false;
                     resolve({
-                        status: `camera streaming stopped`,
+                        status: `camera streaming is off`,
                     });
                 }).catch(err => {
                     winston.error(err.stack);

@@ -136,16 +136,16 @@
                     apiModel: newConf,
                 };
 
-                // send bad request
+                // stop works even if streaming is inactive
                 var response = yield supertest(app).post("/test/camera/stop").send("").expect((res) => {
-                    res.statusCode.should.equal(500);
-                    res.body.should.match(/test camera is not active/);
+                    res.statusCode.should.equal(200);
+                    res.body.should.match(/camera streaming is off/);
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
 
                 done();
             } catch(err) {
                 winston.error(err.message, err.stack);
-                throw(err);
+                done(err);
             }
         }();
         async.next();
@@ -169,14 +169,14 @@
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera started/);
+                res.body.should.match(/camera streaming is on/);
 
                 // stop camera
                 var res = yield supertest(app).post("/test/camera/stop").timeout(httpTimeout).send("")
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera stopped/);
+                res.body.should.match(/camera streaming is off/);
 
                 // TODO: Eliminate need for this timeout
                 yield setTimeout(() => async.next(), 500);
@@ -186,14 +186,14 @@
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera started/);
+                res.body.should.match(/camera streaming is on/);
 
                 // stop camera
                 var res = yield supertest(app).post("/test/camera/stop").timeout(httpTimeout).send("")
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera stopped/);
+                res.body.should.match(/camera streaming is off/);
 
                 done();
             } catch(err) {

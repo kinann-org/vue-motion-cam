@@ -159,16 +159,15 @@
         }();
         async.next();
     });
-    it("stopCamera() stops motion camera service", function(done) {
+    it("TESTstopCamera() stops motion camera service", function(done) {
         var async = function*() {
             try {
                 var mc = new MotionConf();
-                yield mc.stopCamera().catch(e=> {
-                    e.message.should.match(/camera is not active/);
-                    done();
-                });
-                done(new Error("expected failure"));
+                var res = yield mc.stopCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
+                res.status.should.match(/camera streaming is (off|shutting down)/);
+                done();
             } catch (err) {
+                winston.error(err.stack);
                 done(err);
             }
         }();
