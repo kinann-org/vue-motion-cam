@@ -43,19 +43,7 @@
             var optionCams = options.cameras && options.cameras.length && options.cameras || [{}];
             var cameras = new Array(nCams).fill({});
             this.cameras = cameras.map((cam, i) => {
-                var cam = `CAM${i+1}`;
-                return Object.assign({
-                    camera_id: i+1,
-                    input: -1,
-                    movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
-                    picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
-                    snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
-                    stream_port: i+1+this.motion.webcontrol_port,
-                    target_dir: path.join(motionDir, `${cam}`),
-                    text_left: `${cam}`,
-                    videodevice: "/dev/video" + i,
-
-                }, optionCams[i]);
+                return Object.assign(this.defaultCamera(i+1), optionCams[i]);
             });
             var that = this;
             this.spawner = new Spawner({
@@ -240,8 +228,10 @@
                 movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
                 picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
                 snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
+                stream_port: id + this.motion.webcontrol_port,
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,
+                videodevice: `/dev/video${id-1}`,
             }
         }
 
@@ -258,17 +248,7 @@
                 camera = camera || cameras.filter(c => 
                     c.signature == null && c.videodevice === device.filepath)[0];
                 if (camera == null) { // not found
-                    var icam = cameras.length;
-                    var cam = `CAM${icam+1}`;
-                    camera = {
-                        camera_id: icam+1,
-                        input: -1,
-                        movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
-                        picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
-                        snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
-                        target_dir: path.join(motionDir, `${cam}`),
-                        text_left: `${cam}`,
-                    }
+                    camera = this.defaultCamera(cameras.length+1);
                     cameras.push(camera);
                 }
                 camera.videodevice = device.filepath;
