@@ -27,6 +27,7 @@
             });
             this.options = Object.assign({}, options);
             this.devices = [];
+            this.streaming = false;
         }
 
         updateMotionConf(conf) {
