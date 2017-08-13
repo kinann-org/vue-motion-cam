@@ -24,14 +24,14 @@
                             <v-icon >zoom_in</v-icon>
                         </v-btn>
                     </div>
-                    <div v-for="(camera,i) in cameras" :key="i" class='vmc-feed ' >
+                    <div v-for="(camera,icam) in cameras" :key="icam" class='vmc-feed ' >
                         <div class="vmc-feed-actions">
                                 <div xs-2 offset-xs2 class="pl-1 pt-1 pb-0">{{camera.name}}</div>
-                                <div @click.stop='clickFab(camera,i)' >
-                                    <v-icon v-if="!fab[i]">menu</v-icon>
-                                    <v-icon v-if="fab[i]">close</v-icon>
+                                <div @click.stop='clickFab(camera,icam)' >
+                                    <v-icon v-if="!fab[icam]">menu</v-icon>
+                                    <v-icon v-if="fab[icam]">close</v-icon>
                                 </div>
-                                <v-speed-dial v-model="fab[i]" direction='bottom' 
+                                <v-speed-dial v-model="fab[icam]" direction='bottom' 
                                     absolute
                                     transition="slide-y-reverse-transition"
                                     style='z-index:999; right: 12px; top: 25px;'
@@ -64,6 +64,12 @@
                             </div>
 
                         </div>
+                        <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash">
+                            <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
+                            <v-text-field v-model='apiModelCopy.cameras[icam].name' 
+                                label="Name" value="Input text" class="input-group--focused" ></v-text-field>
+                            {{camera}}
+                        </rb-api-dialog>
                     </div>
                 </div> <!-- vmc-container -->
             <!--
@@ -97,7 +103,7 @@ export default {
     },
     data: function() {
         return {
-            apiSvc: this,
+            apiEditDialog: false,
             imageScales: [0.25,0.5,1],
             scaleIndex: 0,
             startCount: 0,
@@ -111,6 +117,7 @@ export default {
     methods: {
         editCamera(camera) {
             console.log('edit', camera.name);
+            this.apiEdit();
         },
         zoomCamera() {
             this.scaleIndex = (1+this.scaleIndex) % this.imageScales.length;
@@ -210,6 +217,7 @@ export default {
 .vmc-commands {
     display: flex;
     flex-direction: column;
+    border-right: 1pt dotted white;
 }
 .vmc-feed {
     box-sizing: content-box;

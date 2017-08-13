@@ -36,7 +36,7 @@
                     name: this.name,
                 };
                 if (conf) {
-                    var conf = Object.assign({}, conf, defaultConf);
+                    conf = Object.assign({}, defaultConf, conf);
                     this.motionConf = new MotionConf(conf);
                 }
                 this.motionConf = this.motionConf || new MotionConf(defaultConf);

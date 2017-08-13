@@ -191,7 +191,6 @@
                     var err = new Error(`${that.name} camera is already open`);
                     return Promise.reject(err);
                 } catch (err) {
-                console.log("verifying pid", "inactive");
                     // process not active
                 }
             }

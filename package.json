@@ -9,7 +9,7 @@
     "src": "src"
   },
   "dependencies": {
-    "rest-bundle": "^0.20.7"
+    "rest-bundle": "^0.21.5"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",

@@ -18,9 +18,9 @@
         </div>
         <v-list-group value="sidebarRestBundle">
             <v-list-tile slot="item">
-              <v-list-tile-action> <v-icon >description</v-icon> </v-list-tile-action>
+              <v-list-tile-action> <v-icon >help</v-icon> </v-list-tile-action>
               <v-list-tile-content>
-                <v-list-tile-title>RestBundle Components</v-list-tile-title>
+                <v-list-tile-title>rest-bundle</v-list-tile-title>
               </v-list-tile-content>
               <v-list-tile-action>
                 <v-icon dark>keyboard_arrow_down</v-icon>
@@ -39,9 +39,9 @@
         </v-list-group>
         <v-list-group value="sidebarAppRest">
             <v-list-tile slot="item">
-              <v-list-tile-action> <v-icon >description</v-icon> </v-list-tile-action>
+              <v-list-tile-action> <v-icon >help</v-icon> </v-list-tile-action>
               <v-list-tile-content>
-                <v-list-tile-title>{{package.name}} Components</v-list-tile-title>
+                <v-list-tile-title>{{package.name}}</v-list-tile-title>
               </v-list-tile-content>
               <v-list-tile-action>
                 <v-icon dark>keyboard_arrow_down</v-icon>
