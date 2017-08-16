@@ -61,7 +61,7 @@
       </v-list>
     </v-navigation-drawer>
     <v-toolbar fixed flat class="black" >
-        <v-toolbar-side-icon light class="black white--text" @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+        <v-toolbar-side-icon dark @click.stop="drawer = !drawer"></v-toolbar-side-icon>
         <v-toolbar-title class="grey--text text--lighten-1">
             <div style="display:flex; flex-flow:column; ">
                 <span class="mr-2" >{{package.name}} {{package.version}}</span>
