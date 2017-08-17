@@ -1,4 +1,4 @@
-<code>&lt;vue-motion-cam&gt;</code> is a Vue/Vuetify RestBundle for motion capture.
+<code>&lt;vue-motion-cam&gt;</code> is a Vue/Vuetify RestBundle for motion capture from one or more USB cameras.
 
 ### Installation
 ```bash
