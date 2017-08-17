@@ -14,5 +14,7 @@ npm install
 npm run dev
 ```
 
+<a href="http://localhost:4000/#/vmc-camera">http://localhost:4000/#/vmc-camera</a>
+
 <a href="https://raw.githubusercontent.com/kinann-org/vue-motion-cam/master/doc/img/vmc.png"><img
     src="https://raw.githubusercontent.com/kinann-org/vue-motion-cam/master/doc/img/vmc.png" height=200px></a>
