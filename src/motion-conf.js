@@ -97,6 +97,13 @@
         }
 
         cameraConf() {
+            this.cameras.forEach((cam) => {
+                if (cam.framesize) {
+                    var wh = cam.framesize.split("x");
+                    cam.width = wh[0];
+                    cam.height = wh[1];
+                }
+            });
             return this.cameras.map((cam) => {
                 return this.confToString(cam);
             });
@@ -231,8 +238,7 @@
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,
                 videodevice: `/dev/video${id-1}`,
-                width: 640,
-                height: 480,
+                framesize: "640x480",
             }
         }
 

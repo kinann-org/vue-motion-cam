@@ -61,7 +61,7 @@
         var mc = new MotionConf();
         mc.cameraPath(0, "/a/b/c").should.equal("/a/b/c/camera1.conf");
     });
-    it("cameraConf() returns array of text for cameraX.conf", function() {
+    it("TESTcameraConf() returns array of text for cameraX.conf", function() {
         var mc3_2 = new MotionConf({
             version: "3.2",
         });
@@ -72,6 +72,7 @@
         conf3_2[0].should.match(/\nwebcam_port\t8091\n/);  // v3.2
         conf3_2[0].should.not.match(/\ninput\t-1\n/);  // v4
         conf3_2[0].should.match(/\nheight\t480\n/);  // v3.2
+        conf3_2[0].should.match(/\n# framesize\t640x480\n/);  // v3.2
         var mc = new MotionConf();
         var conf = mc.cameraConf();
         should.deepEqual(conf, conf3_2);

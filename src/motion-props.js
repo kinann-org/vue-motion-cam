@@ -36,6 +36,7 @@
         ffmpeg_video_codec: "ffmpeg_video_codec",
         flip_axis: "flip_axis",
         framerate: "framerate",
+        framesize: "# framesize",
         frequency: "frequency",
         height: "height",
         hue: "hue",

@@ -68,7 +68,11 @@
                             <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
                             <v-text-field v-model='apiModelCopy.cameras[icam].name' 
                                 label="Name" value="Input text" class="input-group--focused" ></v-text-field>
-                            {{camera}}
+                            <v-select v-model="apiModelCopy.cameras[icam].framesize" 
+                                label="Frame Size" class="input-group--focused"
+                                :items="framesizes(camera)" 
+                            ></v-select>
+                            <rb-tree-view :data="cameraDetails(camera)" rootKey="details" initialDepth="0"/>
                         </rb-api-dialog>
                     </div>
                 </div> <!-- vmc-container -->
@@ -115,6 +119,30 @@ export default {
         }
     },
     methods: {
+        framesizes(camera) {
+            var device = this.devices[camera.videodevice];
+            return device.framesizes.reduce((a,fs) => {
+                var wh = fs.split("x");
+                var width = wh[0];
+                var height = wh[1];
+                if (width % 16 || height % 16) {
+                    return a;
+                }
+                a.push(fs);
+                return a;
+            }, []).sort((a,b) => {
+                var awh = a.split("x");
+                var bwh = b.split("x");
+                var cmp = awh[0] - bwh[0];
+                return cmp ? cmp : awh[1] - bwh[1];
+            });
+        },
+        cameraDetails(camera) {
+            return {
+                settings: camera,
+                device: this.devices[camera.videodevice],
+            }
+        },
         editCamera(camera) {
             console.log('edit', camera.name);
             this.apiEdit();
@@ -187,7 +215,10 @@ export default {
         },
         cameras() {
             return this.rbResource && this.rbResource.apiModel && this.rbResource.apiModel.cameras;
-        }
+        },
+        devices() {
+            return this.rbService.devices;
+        },
     },
     components: {
         RbApiDialog,
