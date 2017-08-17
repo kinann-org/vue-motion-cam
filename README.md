@@ -1,9 +1,9 @@
 <code>&lt;vue-motion-cam&gt;</code> is a Vue/Vuetify RestBundle for motion capture from one or more USB cameras.
 
 * **settings dialog** lets user update and save individual camera settings such as <var>framesize</var>
-* **auto-device recognition** scans for available USB video devices and pairs active devices with new/existing camera settings.
-* **vuex store** maintains shared camera state and configuration.
-* **generates motion configuration files** automatically from JSON camera settings saved on hosting server.
+* **auto-device recognition** pairs active USB video devices with new/existing camera settings.
+* **vuex store** shares camera state and configuration.
+* **auto-generates motion configuration files** from JSON camera settings saved on hosting server.
 
 ### Installation
 ```bash
