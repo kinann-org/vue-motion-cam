@@ -9,7 +9,8 @@
     "src": "src"
   },
   "dependencies": {
-    "rest-bundle": "^0.21.8"
+    "rest-bundle": "^0.21.8",
+    "rimraf": "^2.6.1"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",
