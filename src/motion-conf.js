@@ -7,6 +7,7 @@
     const appdir = process.cwd();
     const motionDir = path.join(appdir, ".motion");
     const Spawner = require('./spawner');
+    const { exec } = require('child_process');
     const props3_2 = require('./motion-props').props3_2;
 
     class MotionConf {
@@ -22,7 +23,7 @@
             Object.defineProperty(this, "STATUS_ERROR", { value: "error" });
             this.status = this.STATUS_UNKNOWN;
             this.motion = Object.assign({
-                ffmpeg_cap_new: "on",
+                ffmpeg_output_movies: "on",
                 locate_motion_mode: "on",
                 logfile: path.join(this.confDir, "motion.log"),
                 max_movie_time: 60,
@@ -49,6 +50,20 @@
             this.spawner = new Spawner({
                 logName: this.motion.logfile,
                 stdOutFilter: function(line) { return that._lineFilter(line) },
+            });
+        }
+
+        static installedVersion() {
+            return new Promise((resolve, reject) => {
+                var cmd = 'bash -c "motion -h 2>&1 | sed -n 1p | sed \\"s/[^0-9]*\\([0-9.]*\\).*/\\1/\\""';
+                exec(cmd, null, (error, stdout, stderr) => {
+                    if (error) {
+                        winston.warn(error);
+                        reject(error);
+                    } else {
+                        resolve(stdout.trim());
+                    }
+                });
             });
         }
 
@@ -262,6 +277,7 @@
                 camera.signature = device.signature;
                 camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
                 camera.name = camera.name || `CAM${camera.camera_id}`;
+                camera.usage = camera.usage || 'motion';
             });
         }
 

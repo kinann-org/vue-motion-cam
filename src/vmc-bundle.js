@@ -22,29 +22,37 @@
                 ]),
             });
             this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
-            this.updateMotionConf({
-                name: this.name,
-            });
+            //this.initialize({
+                //name: this.name,
+            //});
             this.options = Object.assign({}, options);
             this.devices = [];
             this.streaming = false;
         }
 
-        updateMotionConf(conf) {
+        initialize(conf) {
             return new Promise((resolve, reject) => {
-                var defaultConf = {
-                    name: this.name,
-                };
-                if (conf) {
-                    conf = Object.assign({}, defaultConf, conf);
-                    this.motionConf = new MotionConf(conf);
-                }
-                this.motionConf = this.motionConf || new MotionConf(defaultConf);
-                new V4L2Ctl().listDevices().then(devices => {
-                    this.devices = devices;
-                    this.motionConf.bindDevices(devices);
-                    resolve( this.motionConf );
-                }).catch(e => reject(e));
+                //var async = function*() {
+                    try {
+                        var defaultConf = {
+                            name: this.name,
+                        };
+                        if (conf) {
+                            conf = Object.assign({}, defaultConf, conf);
+                            this.motionConf = new MotionConf(conf);
+                        }
+                        this.motionConf = this.motionConf || new MotionConf(defaultConf);
+                        new V4L2Ctl().listDevices().then(devices => {
+                            this.devices = devices;
+                            this.motionConf.bindDevices(devices);
+                            resolve( this.motionConf );
+                        }).catch(e => reject(e));
+                    } catch (err) {
+                        winston.warn(err.stack);
+                        async.throw(err);
+                    }
+                //}();
+                //async.next();
             });
         }
 
@@ -54,9 +62,9 @@
                     .then(model => {
                         try {
                             if (model) {
-                                this.updateMotionConf(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                                this.initialize(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                             } else if (filePath === this.apiFile) {
-                                this.updateMotionConf().then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                                this.initialize().then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                             } else {
                                 throw new Error("unknown api model:" + filePath);
                             }
@@ -77,7 +85,7 @@
                             if (filePath !== this.apiFile) {
                                 throw new Error(`filePath expected:${this.apiFile} actual:${filePath}`);
                             }
-                            this.updateMotionConf(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                            this.initialize(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                         } catch (err) { // implementation error
                             winston.error(err.message, err.stack);
                             reject(err);

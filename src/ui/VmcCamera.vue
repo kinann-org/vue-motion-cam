@@ -66,12 +66,21 @@
                         </div>
                         <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash">
                             <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
-                            <v-text-field v-model='apiModelCopy.cameras[icam].name' 
-                                label="Name" value="Input text" class="input-group--focused" ></v-text-field>
-                            <v-select v-model="apiModelCopy.cameras[icam].framesize" 
-                                label="Frame Size" class="input-group--focused"
-                                :items="framesizes(camera)" 
-                            ></v-select>
+                            <rb-dialog-row label="Motion API">
+                                <v-select v-model='apiModelCopy.version' 
+                                    :items='versions'
+                                    label="Version" class="input-group--focused" ></v-select> 
+                            </rb-dialog-row>
+                            <rb-dialog-row label="Camera">
+                                <v-text-field v-model='apiModelCopy.cameras[icam].name' 
+                                    label="Name" value="Input text" class="input-group--focused" ></v-text-field>
+                                <v-select v-model="apiModelCopy.cameras[icam].framesize" 
+                                    label="Frame Size" class="input-group--focused"
+                                    :items="framesizes(camera)" 
+                                ></v-select>
+                                <v-select v-model='apiModelCopy.cameras[icam].usage' 
+                                    label="Usage" :items="usages" class="input-group--focused" ></v-select>
+                            </rb-dialog-row>
                             <rb-tree-view :data="cameraDetails(camera)" rootKey="details" initialDepth="0"/>
                         </rb-api-dialog>
                     </div>
@@ -195,6 +204,18 @@ export default {
         },
     },
     computed: {
+        usages() {
+            return [{
+                text: "Create timelapse movie from pictures taken at regular intervals",
+                value: "timelapse",
+            },{
+                text: "Create movie whenever camera detects motion",
+                value: "motion",
+            }];
+        },
+        versions() {
+            return [ "3.2", "4.x" ];
+        },
         imgHeight() {
             return `${this.imageScales[this.scaleIndex] * 480}px`;
         },

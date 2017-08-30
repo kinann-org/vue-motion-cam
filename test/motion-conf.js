@@ -13,7 +13,7 @@
         confName,
     };
     const defaultMotion = {
-        ffmpeg_cap_new: "on",
+        ffmpeg_output_movies: "on",
         locate_motion_mode: "on",
         logfile: path.join(confDir, "motion.log"),
         max_movie_time: 60,
@@ -47,6 +47,17 @@
         var mc = new MotionConf(customMotion);
         should.ok(mc.motion);
         mc.motion.should.properties(customMotion.motion);
+    });
+    it("MotionConf.installedVersion() returns version number of motion package", function(done) {
+        var promise = MotionConf.installedVersion();
+        should(promise).instanceOf(Promise);
+        promise.then((result) => {
+            should.ok(result.match(/[0-9.][0-9.]*[0-9]/), 'could not determine motion version');
+            done();
+        })
+        .catch(err => {
+            done(err);
+        });
     });
     it("motionConf() returns text for motion.conf", function() {
         var mc = new MotionConf();

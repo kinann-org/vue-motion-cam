@@ -29,7 +29,9 @@ let async = function*() {
         var services = ['test'].concat(argv.filter((a, i) => i>1 && a[0]!=='-' && a!=="test"));
         for (var iService = 0; iService < services.length; iService++) {
             var serviceName = services[iService];
-            restBundles.push(new VmcBundle(serviceName));
+            var vmc = new VmcBundle(serviceName);
+            var result = yield vmc.initialize().then(r=>async.next(r)).catch(e=>async.throw(e));
+            restBundles.push(vmc);
         }
 
         // declare ports
