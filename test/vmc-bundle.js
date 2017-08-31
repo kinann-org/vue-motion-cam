@@ -21,12 +21,15 @@
     function testInit() { 
         return app;
     }
+    var version = "UNKNOWN";
 
     it("Initialize TEST suite", function(done) { // THIS TEST MUST BE FIRST
         var async = function*() {
             if (testRestBundle(app) == null) {
                 yield app.locals.asyncOnReady.push(async);
             }
+            version = yield MotionConf.installedVersion()
+                .then(r=>async.next(r)).catch(e=>async.err(e));
             winston.info("test suite initialized");
             done();
         }();
@@ -63,7 +66,7 @@
                     res.statusCode.should.equal(200);
                     var apiModel = res.body.apiModel;
                     apiModel.type.should.equal("MotionConf");
-                    apiModel.version.should.equal("3.2");
+                    apiModel.version.should.equal(version);
                     apiModel.motion.webcontrol_port.should.equal(8090);
                     apiModel.cameras[0].videodevice.should.equal("/dev/video0");
                     // returned apiModel should be default 
@@ -86,34 +89,39 @@
                 if (fs.existsSync(APIMODEL_PATH)) {
                     fs.unlinkSync(APIMODEL_PATH);
                 }
-                var newConf = Object.assign({}, DEFAULT_CONF);
+
+                // request without rbHash should be rejected and current model returned
+                var badData = {
+                    apiModel: {
+                        test: "bad-data",
+                    }
+                }
+                var response = yield supertest(app).put("/test/motion-conf").send(badData).expect((res) => {
+                    res.statusCode.should.equal(400); // BAD REQUEST (no rbHash)
+                }).end((e,r) => e ? async.throw(e) : async.next(r));
+                var curConf = response.body.data.apiModel;
+                should(curConf).properties({
+                    type: "MotionConf",
+                    version,
+                });
+
+                // change camera1 name
+                var newConf = Object.assign({}, curConf);
                 var putData = {
                     apiModel: newConf,
                 };
-
-                // request without rbHash should be rejected
-                var response = yield supertest(app).put("/test/motion-conf").send(putData).expect((res) => {
-                    res.statusCode.should.equal(400); // BAD REQUEST (no rbHash)
-                }).end((e,r) => e ? async.throw(e) : async.next(r));
-
-                // get current apiModel
-                var response = yield supertest(app).get("/test/motion-conf").expect((res) => {
-                    res.statusCode.should.equal(200);
-                }).end((e,r) => e ? async.throw(e) : async.next(r));
-                var apiModel = response.body.apiModel;
-
-                // change camera1 name
-                newConf.rbHash = apiModel.rbHash;
                 newConf.cameras[0].text_left = 'CAM01';
                 var response = yield supertest(app).put("/test/motion-conf").send(putData).expect((res) => {
                     res.statusCode.should.equal(200);
                     var apiModel = res.body.apiModel;
                     should.ok(apiModel);
                     apiModel.type.should.equal("MotionConf");
-                    apiModel.version.should.equal("3.2");
+                    should(apiModel.version).equal(version);
                     apiModel.motion.webcontrol_port.should.equal(8090);
                     apiModel.cameras[0].text_left.should.equal("CAM01");
-                    apiModel.rbHash.should.equal(rbh.hash(newConf));
+                    should.deepEqual(apiModel, Object.assign({},newConf,{
+                        rbHash: rbh.hash(newConf),
+                    }));
                     should.ok(apiModel);
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
                 done();
@@ -150,7 +158,7 @@
         }();
         async.next();
     });
-    it("POST /camera/start starts camera service", function(done) {
+    it("TESTTESTPOST /camera/start starts camera service", function(done) {
         this.timeout(10000);
         var httpTimeout = 2000;
         var async = function* () {

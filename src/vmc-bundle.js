@@ -22,37 +22,42 @@
                 ]),
             });
             this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
-            //this.initialize({
-                //name: this.name,
-            //});
+            this.updateMotion({
+                name: this.name,
+            });
             this.options = Object.assign({}, options);
             this.devices = [];
             this.streaming = false;
         }
 
-        initialize(conf) {
+        updateMotion(conf) {
+            var that = this;
             return new Promise((resolve, reject) => {
-                //var async = function*() {
+                var async = function*() {
                     try {
+                        var version = yield MotionConf.installedVersion().then(r=>async.next(r)).catch(e=>async.throw(e));
                         var defaultConf = {
-                            name: this.name,
+                            name: that.name,
+                            version,
                         };
                         if (conf) {
-                            conf = Object.assign({}, defaultConf, conf);
-                            this.motionConf = new MotionConf(conf);
+                            conf = Object.assign({}, defaultConf, conf, {
+                                version,
+                            });
+                            that.motionConf = new MotionConf(conf);
                         }
-                        this.motionConf = this.motionConf || new MotionConf(defaultConf);
+                        that.motionConf = that.motionConf || new MotionConf(defaultConf);
                         new V4L2Ctl().listDevices().then(devices => {
-                            this.devices = devices;
-                            this.motionConf.bindDevices(devices);
-                            resolve( this.motionConf );
+                            that.devices = devices;
+                            that.motionConf.bindDevices(devices);
+                            resolve( that.motionConf );
                         }).catch(e => reject(e));
                     } catch (err) {
                         winston.warn(err.stack);
                         async.throw(err);
                     }
-                //}();
-                //async.next();
+                }();
+                async.next();
             });
         }
 
@@ -62,9 +67,9 @@
                     .then(model => {
                         try {
                             if (model) {
-                                this.initialize(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                                this.updateMotion(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                             } else if (filePath === this.apiFile) {
-                                this.initialize().then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                                this.updateMotion().then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                             } else {
                                 throw new Error("unknown api model:" + filePath);
                             }
@@ -85,7 +90,7 @@
                             if (filePath !== this.apiFile) {
                                 throw new Error(`filePath expected:${this.apiFile} actual:${filePath}`);
                             }
-                            this.initialize(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                            this.updateMotion(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                         } catch (err) { // implementation error
                             winston.error(err.message, err.stack);
                             reject(err);

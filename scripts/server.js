@@ -30,7 +30,6 @@ let async = function*() {
         for (var iService = 0; iService < services.length; iService++) {
             var serviceName = services[iService];
             var vmc = new VmcBundle(serviceName);
-            var result = yield vmc.initialize().then(r=>async.next(r)).catch(e=>async.throw(e));
             restBundles.push(vmc);
         }
 

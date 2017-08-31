@@ -72,7 +72,7 @@
             if (key === "logfile") {
                 return "";
             }
-            if (this.version === "3.2") {
+            if (this.version.startsWith("3.2")) {
                 if (key === "input" && value === -1) {
                     // do nothing (3.2 does not like -1);
                 } else if (props3_2[key]) {
