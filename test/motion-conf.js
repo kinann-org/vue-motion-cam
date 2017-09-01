@@ -59,20 +59,134 @@
             done(err);
         });
     });
-    it("motionConf() returns text for motion.conf", function() {
+    it("TESTTESTtoJSON() return serializable api model", function() {
+        var mc = new MotionConf();
+        var apiModel = mc.toJSON();
+        should.deepEqual(apiModel.motion, defaultMotion);
+        should(apiModel).properties({
+            type: "MotionConf",
+            version: "3.2",
+        });
+        should(apiModel.cameras.length).equal(1);
+        should(apiModel.cameras[0]).properties({
+            camera_id: 1,
+            framesize: '640x480',
+            input: -1,
+            movie_filename: 'CAM1_%v-%Y%m%d%H%M%S',
+            picture_filename: 'CAM1_%v-%Y%m%d%H%M%S-%q',
+            snapshot_filename: 'CAM1_%v-%Y%m%d%H%M%S-snapshot',
+            stream_port: 8091,
+        });
+    });
+    it("TESTTESTmotionConf() returns text for motion.conf", function() {
+        // default version 3.2
         var mc = new MotionConf();
         var conf = mc.motionConf();
         winston.debug("conf", conf);
-        conf.should.not.match(/\nwebcontrol_port\t8090\n/); // v4
-        conf.should.match(/\ncontrol_port\t8090\n/);    // v3.2
-        conf.should.not.match(/\ncamera\t.*camera1.conf\n/);    // v4
-        conf.should.match(/\nthread\t.*camera1.conf\n/);    // v3.2
+        conf.should.match(/# version\t3.2/);
+        conf.should.match(/\n# usage\tcustom\n/);
+        conf.should.match(/\nffmpeg_cap_new\ton\n/);
+        conf.should.match(/\nlocate\ton\n/);
+        conf.should.match(/\nmax_mpeg_time\t60\n/);
+        conf.should.match(/\noutput_normal\toff\n/);
+        conf.should.match(/\noutput_motion\tbest\n/);
+        conf.should.match(/\nppm\toff\n/);
+        conf.should.match(/\nquality\t100\n/);
+        conf.should.match(/\nwebcam_localhost\ton\n/);
+        conf.should.match(/\nwebcam_maxrate\t10\n/);
+        conf.should.match(/\nwebcam_quality\t75\n/);
+        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\ncontrol_html_output\ton\n/);
+        conf.should.match(/\ncontrol_localhost\ton\n/);
+        conf.should.match(/\ncontrol_port\t8090\n/);
+        conf.should.match(/\nthread\t.*camera1.conf\n/);
+
+        // version 4 configuration is different
+        var mc = new MotionConf({
+            version: '4.2.10',
+        });
+        var conf = mc.motionConf();
+        winston.level = 'debug';
+        winston.debug("conf", conf);
+        conf.should.match(/# version\t4.2.10/);
+        conf.should.match(/\n# usage\tcustom\n/);
+        conf.should.match(/\nffmpeg_output_movies\ton\n/);
+        conf.should.match(/\nlocate_motion_mode\ton\n/);
+        conf.should.match(/\nmax_movie_time\t60\n/);
+        conf.should.match(/\noutput_debug_pictures\toff\n/);
+        conf.should.match(/\noutput_pictures\tbest\n/);
+        conf.should.match(/\npicture_type\tjpeg\n/);
+        conf.should.match(/\nquality\t100\n/);
+        conf.should.match(/\nstream_localhost\ton\n/);
+        conf.should.match(/\nstream_maxrate\t10\n/);
+        conf.should.match(/\nstream_quality\t75\n/);
+        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\nwebcontrol_html_output\ton\n/);
+        conf.should.match(/\nwebcontrol_localhost\ton\n/);
+        conf.should.match(/\nwebcontrol_port\t8090\n/);
+        conf.should.match(/\ncamera\t.*camera1.conf\n/);
+
+        // usage: timelapse
+        var mc = new MotionConf({
+            usage: 'timelapse',
+            version: '4.3',
+        });
+        var conf = mc.motionConf();
+        winston.level = 'debug';
+        winston.debug("conf", conf);
+        conf.should.match(/# version\t4.3/);
+        conf.should.match(/\n# usage\ttimelapse\n/);
+        conf.should.match(/\nffmpeg_output_movies\toff\n/);
+        conf.should.match(/\nffmpeg_timelapse\t30\n/);
+        conf.should.match(/\nffmpeg_bps\t9999999\n/);
+        conf.should.match(/\nlocate_motion_mode\toff\n/);
+        conf.should.match(/\nmax_movie_time\t86400\n/);
+        conf.should.match(/\noutput_debug_pictures\toff\n/);
+        conf.should.match(/\noutput_pictures\toff\n/);
+        conf.should.match(/\npicture_type\tjpeg\n/);
+        conf.should.match(/\nquality\t100\n/);
+        conf.should.match(/\nstream_localhost\ton\n/);
+        conf.should.match(/\nstream_maxrate\t10\n/);
+        conf.should.match(/\nstream_quality\t75\n/);
+        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\nwebcontrol_html_output\ton\n/);
+        conf.should.match(/\nwebcontrol_localhost\ton\n/);
+        conf.should.match(/\nwebcontrol_port\t8090\n/);
+        conf.should.match(/\ncamera\t.*camera1.conf\n/);
+
+        // usage: motion-capture
+        var mc = new MotionConf({
+            usage: 'motion-capture',
+            version: '4.3',
+        });
+        var conf = mc.motionConf();
+        winston.level = 'debug';
+        winston.debug("conf", conf);
+        conf.should.match(/# version\t4.3/);
+        conf.should.match(/\n# usage\tmotion-capture\n/);
+        conf.should.match(/\nffmpeg_output_movies\ton\n/);
+        conf.should.match(/\nffmpeg_timelapse\t0\n/);
+        conf.should.match(/\nffmpeg_bps\t400000\n/);
+        conf.should.match(/\nlocate_motion_mode\ton\n/);
+        conf.should.match(/\nmax_movie_time\t3600\n/);
+        conf.should.match(/\noutput_debug_pictures\toff\n/);
+        conf.should.match(/\noutput_pictures\ton\n/);
+        conf.should.match(/\npicture_type\tjpeg\n/);
+        conf.should.match(/\nquality\t100\n/);
+        conf.should.match(/\nstream_localhost\ton\n/);
+        conf.should.match(/\nstream_maxrate\t10\n/);
+        conf.should.match(/\nstream_quality\t75\n/);
+        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\nwebcontrol_html_output\ton\n/);
+        conf.should.match(/\nwebcontrol_localhost\ton\n/);
+        conf.should.match(/\nwebcontrol_port\t8090\n/);
+        conf.should.match(/\ncamera\t.*camera1.conf\n/);
     });
     it("cameraPath(iCam) returns filepath to camera configuration fileconf", function() {
         var mc = new MotionConf();
         mc.cameraPath(0, "/a/b/c").should.equal("/a/b/c/camera1.conf");
     });
-    it("TESTcameraConf() returns array of text for cameraX.conf", function() {
+    it("cameraConf() returns array of text for cameraX.conf", function() {
         var mc3_2 = new MotionConf({
             version: "3.2",
         });
@@ -172,7 +286,7 @@
         }();
         async.next();
     });
-    it("TESTstopCamera() stops motion camera service", function(done) {
+    it("stopCamera() stops motion camera service", function(done) {
         var async = function*() {
             try {
                 var mc = new MotionConf();

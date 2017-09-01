@@ -1,13 +1,19 @@
 (function(exports) {
+    const props_vmc = {
+        camera_dir: "# camera_dir",
+        camera_id: "# camera_id",
+        camera_name: "# camera_name:",
+        framesize: "# framesize",
+        signature: "# signature",
+        usage: "# usage",
+    }
+
     const props3_2 = {
         // See http://htmlpreview.github.io/?https://github.com/Motion-Project/motion/blob/master/motion_guide.html
         area_detect: "area_detect",
         auto_brightness: "auto_brightness",
         brightness: "brightness",
         camera: "thread",
-        camera_dir: "# camera_dir",
-        camera_id: "# camera_id",
-        camera_name: "# camera_name:",
         contrast: "contrast",
         daemon: "daemon",
         database_busy_timeout: "# database_busy_timeout:",
@@ -36,7 +42,6 @@
         ffmpeg_video_codec: "ffmpeg_video_codec",
         flip_axis: "flip_axis",
         framerate: "framerate",
-        framesize: "# framesize",
         frequency: "frequency",
         height: "height",
         hue: "hue",
@@ -146,6 +151,7 @@
 
     module.exports = exports.MotionProps = {
         props3_2,
+        props_vmc,
     }
 
 })(typeof exports === "object" ? exports : (exports = {}));

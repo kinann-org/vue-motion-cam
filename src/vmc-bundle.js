@@ -35,7 +35,8 @@
             return new Promise((resolve, reject) => {
                 var async = function*() {
                     try {
-                        var version = yield MotionConf.installedVersion().then(r=>async.next(r)).catch(e=>async.throw(e));
+                        var version = yield MotionConf.installedVersion()
+                            .then(r=>async.next(r)).catch(e=>async.throw(e));
                         var defaultConf = {
                             name: that.name,
                             version,

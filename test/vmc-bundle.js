@@ -158,7 +158,7 @@
         }();
         async.next();
     });
-    it("TESTTESTPOST /camera/start starts camera service", function(done) {
+    it("POST /camera/start starts camera service", function(done) {
         this.timeout(10000);
         var httpTimeout = 2000;
         var async = function* () {
