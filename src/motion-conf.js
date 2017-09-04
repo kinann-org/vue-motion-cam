@@ -21,7 +21,7 @@
     class MotionConf {
         constructor(options = {}) {
             this.type = this.constructor.name;
-            this.usage = options.usage || 'custom';
+            this.usage = options.usage || 'stream';
             this.status = null; //indeterminate
             this.name = options.name || "test";
             this.confName = options.confName || `motion-${this.name}.conf`;
@@ -43,8 +43,8 @@
                 quality: 100,
                 stream_localhost: "on",
                 stream_maxrate: 10,
-                stream_quality: 75,
-                target_dir: motionDir,
+                stream_quality: 50,
+                //target_dir: motionDir,
                 webcontrol_html_output: "on",
                 webcontrol_localhost: "on",
                 webcontrol_port: 8090,
@@ -132,6 +132,12 @@
                 this.motion.ffmpeg_timelapse = 0;
                 this.motion.ffmpeg_output_movies = 'on';
                 this.motion.locate_motion_mode = 'on';
+            } else if (this.usage === 'stream') {
+                this.motion.max_movie_time = 3600;
+                this.motion.output_pictures = 'off';
+                this.motion.ffmpeg_timelapse = 0;
+                this.motion.ffmpeg_output_movies = 'off';
+                this.motion.locate_motion_mode = 'off';
             }
             var conf = this.confToString(this.motion);
             this.cameras.forEach((c, i) => {

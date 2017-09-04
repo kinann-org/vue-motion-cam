@@ -67,9 +67,31 @@
                         <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash">
                             <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
                             <rb-dialog-row label="Motion API">
-                                <v-select v-model='apiModelCopy.version' 
-                                    :items='versions'
-                                    label="Version" class="input-group--focused" ></v-select> 
+                                <v-text-field v-model='apiModelCopy.version' 
+                                    label="Version" disabled class="input-group--focused" />
+                                <v-select v-model='apiModelCopy.usage' 
+                                    :items="usages" item-text='text' item-value='value'
+                                    label="Usage" class="input-group--focused" ></v-select>
+                                <v-select v-model='apiModelCopy.motion.stream_localhost' 
+                                    :items="localhost_items" item-text='text' item-value='value'
+                                    label="Camera streaming" class="input-group--focused" ></v-select>
+                                <v-select v-model='apiModelCopy.motion.stream_maxrate' 
+                                    :items="stream_rate" item-text='text' item-value='value'
+                                    v-if="apiModelCopy.usage !== 'custom'"
+                                    label="Streaming rate" class="input-group--focused" ></v-select>
+                                <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
+                                    v-if="apiModelCopy.usage === 'custom'"
+                                    label="stream_maxrate" class="input-group--focused" />
+                                <v-select v-model='apiModelCopy.motion.stream_quality' 
+                                    :items="stream_quality" item-text='text' item-value='value'
+                                    v-if="apiModelCopy.usage !== 'custom'"
+                                    label="Picture quality" class="input-group--focused" ></v-select>
+                                <v-text-field v-model='apiModelCopy.motion.stream_quality' 
+                                    v-if="apiModelCopy.usage === 'custom'"
+                                    label="stream_quality" class="input-group--focused" />
+                                <v-select v-model='apiModelCopy.motion.webcontrol_localhost' 
+                                    :items="localhost_items" item-text='text' item-value='value'
+                                    label="Web control page" class="input-group--focused" ></v-select>
                             </rb-dialog-row>
                             <rb-dialog-row label="Camera">
                                 <v-text-field v-model='apiModelCopy.cameras[icam].name' 
@@ -78,8 +100,6 @@
                                     label="Frame Size" class="input-group--focused"
                                     :items="framesizes(camera)" 
                                 ></v-select>
-                                <v-select v-model='apiModelCopy.cameras[icam].usage' 
-                                    label="Usage" :items="usages" class="input-group--focused" ></v-select>
                             </rb-dialog-row>
                             <rb-tree-view :data="cameraDetails(camera)" rootKey="details" initialDepth="0"/>
                         </rb-api-dialog>
@@ -206,15 +226,63 @@ export default {
     computed: {
         usages() {
             return [{
-                text: "Create timelapse movie from pictures taken at regular intervals",
+                text: "Stream only (no movies) ",
+                value: "stream",
+            },{
+                text: "Timelapse movie (watch flowers grow) ",
                 value: "timelapse",
             },{
-                text: "Create movie whenever camera detects motion",
-                value: "motion",
+                text: "Motion Capture (burglar movies)",
+                value: "motion-capture",
+            },{
+                text: "Custom (run with scissors) ",
+                value: "custom",
             }];
         },
-        versions() {
-            return [ "3.2", "4.x" ];
+        stream_quality() {
+            return [{
+                text: "My equipment is the best (100%)",
+                value: 100,
+            },{
+                text: "Fine (90%)",
+                value: 90,
+            },{
+                text: "Medium (50%)",
+                value: 50,
+            },{
+                text: "Coarse (10%)",
+                value: 10,
+            },{
+                text: "Pixel art (1%)",
+                value: 1,
+            }];
+        },
+        stream_rate() {
+            return [{
+                text: "My equipment is the best (100fps)",
+                value: 100,
+            },{
+                text: "HD if I can (60fps)",
+                value: 60,
+            },{
+                text: "Better than TV (30fps)",
+                value: 30,
+            },{
+                text: "Cheap and choppy (10fps)",
+                value: 10,
+            },{
+                text: "Horror movie (1fps)",
+                value: 1,
+            }];
+        },
+        localhost_items() {
+            return [{
+                text: "Restrict to localhost (most secure)",
+                value: "on",
+            },{
+                text: "Allow any host (most useful)",
+                value: "off",
+            }];
         },
         imgHeight() {
             return `${this.imageScales[this.scaleIndex] * 480}px`;

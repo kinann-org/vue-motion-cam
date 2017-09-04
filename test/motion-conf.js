@@ -24,8 +24,8 @@
         //process_id_file: path.join(confDir, "pid-test.txt"),
         stream_localhost: "on",
         stream_maxrate: 10,
-        stream_quality: 75,
-        target_dir: path.join(appDir,".motion"),
+        stream_quality: 50,
+        //target_dir: path.join(appDir,".motion"),
         webcontrol_port: 8090,
         webcontrol_html_output: "on",
         webcontrol_localhost: "on",
@@ -78,9 +78,31 @@
             stream_port: 8091,
         });
     });
-    it("TESTTESTmotionConf() returns text for motion.conf", function() {
-        // default version 3.2
+    it("motionConf() returns text for motion.conf", function() {
+        // default version 3.2, stream
         var mc = new MotionConf();
+        var conf = mc.motionConf();
+        winston.debug("conf", conf);
+        conf.should.match(/# version\t3.2/);
+        conf.should.match(/\n# usage\tstream\n/);
+        conf.should.match(/\nffmpeg_cap_new\toff\n/);
+        conf.should.match(/\nlocate\toff\n/);
+        conf.should.match(/\noutput_normal\toff\n/);
+        conf.should.match(/\noutput_motion\toff\n/);
+        conf.should.match(/\nppm\toff\n/);
+        conf.should.match(/\nquality\t100\n/);
+        conf.should.match(/\nwebcam_localhost\ton\n/);
+        conf.should.match(/\nwebcam_maxrate\t10\n/);
+        conf.should.match(/\nwebcam_quality\t50\n/);
+        conf.should.match(/\ncontrol_html_output\ton\n/);
+        conf.should.match(/\ncontrol_localhost\ton\n/);
+        conf.should.match(/\ncontrol_port\t8090\n/);
+        conf.should.match(/\nthread\t.*camera1.conf\n/);
+
+        // default version 3.2
+        var mc = new MotionConf({
+            usage: 'custom',
+        });
         var conf = mc.motionConf();
         winston.debug("conf", conf);
         conf.should.match(/# version\t3.2/);
@@ -94,8 +116,8 @@
         conf.should.match(/\nquality\t100\n/);
         conf.should.match(/\nwebcam_localhost\ton\n/);
         conf.should.match(/\nwebcam_maxrate\t10\n/);
-        conf.should.match(/\nwebcam_quality\t75\n/);
-        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\nwebcam_quality\t50\n/);
+        //conf.should.match(/\ntarget_dir\t.*.motion\n/);
         conf.should.match(/\ncontrol_html_output\ton\n/);
         conf.should.match(/\ncontrol_localhost\ton\n/);
         conf.should.match(/\ncontrol_port\t8090\n/);
@@ -104,9 +126,9 @@
         // version 4 configuration is different
         var mc = new MotionConf({
             version: '4.2.10',
+            usage: 'custom',
         });
         var conf = mc.motionConf();
-        winston.level = 'debug';
         winston.debug("conf", conf);
         conf.should.match(/# version\t4.2.10/);
         conf.should.match(/\n# usage\tcustom\n/);
@@ -119,8 +141,8 @@
         conf.should.match(/\nquality\t100\n/);
         conf.should.match(/\nstream_localhost\ton\n/);
         conf.should.match(/\nstream_maxrate\t10\n/);
-        conf.should.match(/\nstream_quality\t75\n/);
-        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\nstream_quality\t50\n/);
+        //conf.should.match(/\ntarget_dir\t.*.motion\n/);
         conf.should.match(/\nwebcontrol_html_output\ton\n/);
         conf.should.match(/\nwebcontrol_localhost\ton\n/);
         conf.should.match(/\nwebcontrol_port\t8090\n/);
@@ -132,7 +154,6 @@
             version: '4.3',
         });
         var conf = mc.motionConf();
-        winston.level = 'debug';
         winston.debug("conf", conf);
         conf.should.match(/# version\t4.3/);
         conf.should.match(/\n# usage\ttimelapse\n/);
@@ -147,8 +168,8 @@
         conf.should.match(/\nquality\t100\n/);
         conf.should.match(/\nstream_localhost\ton\n/);
         conf.should.match(/\nstream_maxrate\t10\n/);
-        conf.should.match(/\nstream_quality\t75\n/);
-        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\nstream_quality\t50\n/);
+        //conf.should.match(/\ntarget_dir\t.*.motion\n/);
         conf.should.match(/\nwebcontrol_html_output\ton\n/);
         conf.should.match(/\nwebcontrol_localhost\ton\n/);
         conf.should.match(/\nwebcontrol_port\t8090\n/);
@@ -160,7 +181,6 @@
             version: '4.3',
         });
         var conf = mc.motionConf();
-        winston.level = 'debug';
         winston.debug("conf", conf);
         conf.should.match(/# version\t4.3/);
         conf.should.match(/\n# usage\tmotion-capture\n/);
@@ -175,8 +195,8 @@
         conf.should.match(/\nquality\t100\n/);
         conf.should.match(/\nstream_localhost\ton\n/);
         conf.should.match(/\nstream_maxrate\t10\n/);
-        conf.should.match(/\nstream_quality\t75\n/);
-        conf.should.match(/\ntarget_dir\t.*.motion\n/);
+        conf.should.match(/\nstream_quality\t50\n/);
+        //conf.should.match(/\ntarget_dir\t.*.motion\n/);
         conf.should.match(/\nwebcontrol_html_output\ton\n/);
         conf.should.match(/\nwebcontrol_localhost\ton\n/);
         conf.should.match(/\nwebcontrol_port\t8090\n/);
