@@ -4,6 +4,7 @@
     const fs = require('fs');
     const path = require('path');
     const winston = require("winston");
+    winston.level = "warn";
     const Spawner = require("../index").Spawner;
     const appdir = process.cwd();
     const logName = path.join(appdir, "spawner.log");
@@ -72,6 +73,7 @@
                 result.should.equal(ss.process);
 
                 // reject on red
+                winston.error("Following error is expected");
                 var result = yield ss.spawn([
                     'printf', 
                     [   

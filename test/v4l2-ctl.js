@@ -1,6 +1,7 @@
 (typeof describe === 'function') && describe("V4L2Ctl", function() {
     const should = require("should");
     const winston = require("winston");
+    winston.level = "warn";
     const V4L2Ctl = require("../index").V4L2Ctl;
     
     it("listDevices() returns JSON array describing devices", function(done) {

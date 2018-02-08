@@ -91,6 +91,7 @@
                 var handled = false;
                 function rejectWith(err) {
                     var err = err instanceof Error ? err : new Error(err);
+                    winston.error(`Spawner.spawn().rejectWithErr()`, err.stack);
                     that.logger.error(err.stack);
                     reject(err);
                     if (that.process) {
@@ -109,12 +110,16 @@
                             var action = filter(line);
                             if (action === Spawner.LINE_REJECT) {
                                 handled = true;
+                                winston.error(`Spawner reject( ${line} )`);
                                 that.logger.info(`Spawner reject( ${line} )`);
                                 rejectWith(line);
                             } else if (action === Spawner.LINE_RESOLVE) {
                                 handled = true;
+                                winston.info(`Spawner resolve( process:${that.process.pid} )`);
                                 that.logger.info(`Spawner resolve( process:${that.process.pid} )`);
                                 resolve(that.process);
+                            } else {
+                                winston.debug(`Spawner ignoring:`, line);
                             }
                         }
                     }
@@ -122,7 +127,8 @@
 
                 try {
                     var proc = that.process = spawn(cmd[0], cmd.slice(1));
-                    that.logger.info("Spawner spawned:", proc.pid);
+                    winston.info("Spawner spawned pid:", proc.pid);
+                    that.logger.info("Spawner spawned pid:", proc.pid);
                     proc.stdout.on('data', (chunk) => filterChunk(chunk, that.stdOutFilter));
                     proc.stderr.on('data', (chunk) => filterChunk(chunk, that.stdErrFilter));
                     proc.on('exit', (code,signal) => {
@@ -131,7 +137,9 @@
                     proc.on('close', (code,signal) => {
                         that.logger.info(`Spawner closed:${code} signal:${signal}`);
                         if (!handled) {
-                            reject(new Error("Spawner child process EOF"));
+                            var err = new Error("Spawner child process EOF");
+                            winston.error(err.stack);
+                            reject(err);
                             handled = true;
                         }
                     });
@@ -139,6 +147,7 @@
                         that.logger.error("Spawner error:", err.message, err.stack);
                     });
                 } catch (err) {
+                    winston.error("Spawner.spawn", err.stack);
                     rejectWith(err);
                 }
             });

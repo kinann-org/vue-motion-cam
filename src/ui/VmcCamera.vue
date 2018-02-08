@@ -68,36 +68,36 @@
                             <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
                             <rb-dialog-row label="Motion API">
                                 <v-text-field v-model='apiModelCopy.version' 
-                                    label="Version" disabled class="input-group--focused" />
+                                    label="Version" disabled class="input-group" />
                                 <v-select v-model='apiModelCopy.usage' 
                                     :items="usages" item-text='text' item-value='value'
-                                    label="Usage" class="input-group--focused" ></v-select>
+                                    label="Usage" class="input-group" ></v-select>
                                 <v-select v-model='apiModelCopy.motion.stream_localhost' 
                                     :items="localhost_items" item-text='text' item-value='value'
-                                    label="Camera streaming" class="input-group--focused" ></v-select>
+                                    label="Camera streaming" class="input-group" ></v-select>
                                 <v-select v-model='apiModelCopy.motion.stream_maxrate' 
                                     :items="stream_rate" item-text='text' item-value='value'
                                     v-if="apiModelCopy.usage !== 'custom'"
-                                    label="Streaming rate" class="input-group--focused" ></v-select>
+                                    label="Streaming rate" class="input-group" ></v-select>
                                 <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
                                     v-if="apiModelCopy.usage === 'custom'"
-                                    label="stream_maxrate" class="input-group--focused" />
+                                    label="stream_maxrate" class="input-group" />
                                 <v-select v-model='apiModelCopy.motion.stream_quality' 
                                     :items="stream_quality" item-text='text' item-value='value'
                                     v-if="apiModelCopy.usage !== 'custom'"
-                                    label="Picture quality" class="input-group--focused" ></v-select>
+                                    label="Picture quality" class="input-group" ></v-select>
                                 <v-text-field v-model='apiModelCopy.motion.stream_quality' 
                                     v-if="apiModelCopy.usage === 'custom'"
-                                    label="stream_quality" class="input-group--focused" />
+                                    label="stream_quality" class="input-group" />
                                 <v-select v-model='apiModelCopy.motion.webcontrol_localhost' 
                                     :items="localhost_items" item-text='text' item-value='value'
-                                    label="Web control page" class="input-group--focused" ></v-select>
+                                    label="Web control page" class="input-group" ></v-select>
                             </rb-dialog-row>
                             <rb-dialog-row label="Camera">
-                                <v-text-field v-model='apiModelCopy.cameras[icam].name' 
-                                    label="Name" value="Input text" class="input-group--focused" ></v-text-field>
+                                <v-text-field v-model='apiModelCopy.cameras[icam].camera_name' 
+                                    label="Name" value="Input text" class="input-group" ></v-text-field>
                                 <v-select v-model="apiModelCopy.cameras[icam].framesize" 
-                                    label="Frame Size" class="input-group--focused"
+                                    label="Frame Size" class="input-group"
                                     :items="framesizes(camera)" 
                                 ></v-select>
                             </rb-dialog-row>

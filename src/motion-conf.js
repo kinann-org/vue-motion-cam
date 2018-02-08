@@ -8,7 +8,11 @@
     const motionDir = path.join(appdir, ".motion");
     const Spawner = require('./spawner');
     const { exec } = require('child_process');
-    const { props3_2, props_vmc } = require('./motion-props');
+    const { 
+        props3_2_12,
+        props3_2, 
+        props_vmc ,
+    } = require('./motion-props');
     const timelapse_periods = {
         hourly: 3600,
         daily: 86400,
@@ -26,7 +30,8 @@
             this.name = options.name || "test";
             this.confName = options.confName || `motion-${this.name}.conf`;
             this.confDir = options.confDir || motionDir;
-            this.version = options.version || "3.2";
+            this.version = options.version || "3.2.12";
+            winston.info(`MotionConf ${this.version}`);
             Object.defineProperty(this, "STATUS_UNKNOWN", { value: "unknown" });
             Object.defineProperty(this, "STATUS_OPEN", { value: "open" });
             Object.defineProperty(this, "STATUS_ERROR", { value: "error" });
@@ -70,7 +75,9 @@
                         winston.warn(error);
                         reject(error);
                     } else {
-                        resolve(stdout.trim());
+                        var result = stdout.trim();
+                        winston.info(`MotionConf.installedVersion() => ${result}`);
+                        resolve(result);
                     }
                 });
             });
@@ -83,7 +90,7 @@
             }
             if (props_vmc[key]) {
                 conf += `${props_vmc[key]}\t${value}\n`;
-            } else if (this.version.startsWith("3.2")) {
+            } else if (this.version < "3.2.12") { // 3.2
                 if (key === "input" && value === -1) {
                     // do nothing (3.2 does not like -1);
                 } else if (key === "picture_type") {
@@ -91,6 +98,17 @@
                     conf += `ppm\t${ppm}\n`;
                 } else if (props3_2[key]) {
                     conf += `${props3_2[key]}\t${value}\n`;
+                } else {
+                    conf += `${key}\t${value}\n`;
+                }
+            } else if (this.version <= "3.2.12") { // 3.2.12
+                if (key === "input" && value === -1) {
+                    // do nothing (3.2 does not like -1);
+                } else if (key === "picture_type") {
+                    var ppm = value==='ppm' ? 'on' : 'off';
+                    conf += `picture_type\t${ppm}\n`;
+                } else if (props3_2_12[key]) {
+                    conf += `${props3_2_12[key]}\t${value}\n`;
                 } else {
                     conf += `${key}\t${value}\n`;
                 }
@@ -171,11 +189,14 @@
                             yield fs.mkdir(that.confDir, (err) => err ? async.throw(err) : async.next(err));
                         }
                         var motion = that.motionConf(that.confDir);
-                        yield fs.writeFile(path.join(that.confDir, that.confName), motion,
+                        var confpath = path.join(that.confDir, that.confName);
+                        winston.info(`MotionConf.writeConf() ${confpath}`);
+                        yield fs.writeFile(confpath, motion,
                             (err) => err ? async.throw(err) : async.next(true));
                         var cameras = that.cameraConf();
                         for (var i = 0; i < cameras.length; i++) {
                             var campath = path.join(that.confDir, `camera${i+1}.conf`);
+                            winston.info(`MotionConf.writeConf() ${campath}`);
                             yield fs.writeFile(campath, cameras[i],
                                 (err) => err ? async.throw(err) : async.next(true));
                         };
@@ -214,6 +235,7 @@
                         var r = yield that._spawnMotion().then(r=>async.next(r)).catch(e=>async.throw(e));
                         resolve(r);
                     } catch (err) {
+                        winston.err(`MotionConf.startCamera()`, err.stack);
                         reject(err);
                     }
                 }();
@@ -237,6 +259,13 @@
                 var nExpected = this.cameras.reduce((a,c) => (c.stream_port ? a+1:a), 0);
                 winston.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
                 return nExpected === this.nStreams ? Spawner.LINE_RESOLVE : Spawner.LINE_INFO;
+            } else if (line.match(/Waiting for threads to finish/)) {
+                this.status = this.STATUS_OPEN;
+                this.statusText = line;
+                this.nStreams++;
+                var nExpected = this.cameras.reduce((a,c) => (c.stream_port ? a+1:a), 0);
+                winston.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
+                return nExpected === this.nStreams ? Spawner.LINE_RESOLVE : Spawner.LINE_INFO;
             } else {
                 return Spawner.LINE_INFO;
             }
@@ -252,11 +281,13 @@
                     var err = new Error(`${that.name} camera is already open`);
                     return Promise.reject(err);
                 } catch (err) {
+                    winston.info("No existing camera service: starting camera service...");
                     // process not active
                 }
             }
             that.status = that.STATUS_UNKNOWN;
             that.nStreams = 0;
+            winston.info("MotionConf._spqnMotion", cmd);
             return that.spawner.spawn(cmd);
         }
 
@@ -291,6 +322,7 @@
                 stream_port: id + this.motion.webcontrol_port,
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,
+                camera_name: `${cam}`,
                 videodevice: `/dev/video${id-1}`,
                 framesize: "640x480",
             }
@@ -312,10 +344,23 @@
                     camera = this.defaultCamera(cameras.length+1);
                     cameras.push(camera);
                 }
+                var width = camera.framesize.split("x")[0];
+                var height = camera.framesize.split("x")[1];
+                var s = null;
+                if (s = device.framesizes.find(s => camera.framesize === s)) {
+                    winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize ok:${s}`);
+                } else if (s = device.framesizes.find(s => 0<s.indexOf('x'+height))) {
+                    winston.info(`MotionConf.bindDevices() ${camera.camera_name} setting framesize from height: ${s}`);
+                    camera.framesize = s;
+                } else {
+                    camera.framesize = device.framesizes[0];
+                    winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize is now: ${camera.framesize}`);
+                }
+                console.log("camera.framesize", camera.framesize);
                 camera.videodevice = device.filepath;
                 camera.signature = device.signature;
                 camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
-                camera.name = camera.name || `CAM${camera.camera_id}`;
+                camera.camera_name = camera.camera_name || `CAM${camera.camera_id}`;
             });
         }
 

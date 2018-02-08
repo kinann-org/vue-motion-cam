@@ -4,6 +4,7 @@
     const MotionConf = require("../index").MotionConf;
     const supertest = require('supertest');
     const winston = require('winston');
+    winston.level = "warn";
     const srcPkg = require("../package.json");
     const rb = require('rest-bundle');
     const rbh = new rb.RbHash();
@@ -96,6 +97,7 @@
                         test: "bad-data",
                     }
                 }
+                winston.warn("Following error is expected");
                 var response = yield supertest(app).put("/test/motion-conf").send(badData).expect((res) => {
                     res.statusCode.should.equal(400); // BAD REQUEST (no rbHash)
                 }).end((e,r) => e ? async.throw(e) : async.next(r));

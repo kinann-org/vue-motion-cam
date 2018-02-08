@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo apt-get update
+sudo apt-get install -y v4l-utils  # Command line utilities for Video4Linux version 2 video library
+sudo apt-get install -y motion # Linux motion capture library for Video4Linux
+npm install
