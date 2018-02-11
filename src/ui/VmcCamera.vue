@@ -26,7 +26,7 @@
                     </div>
                     <div v-for="(camera,icam) in cameras" :key="icam" class='vmc-feed ' >
                         <div class="vmc-feed-actions">
-                                <div xs-2 offset-xs2 class="pl-1 pt-1 pb-0">{{camera.name}}</div>
+                                <div xs-2 offset-xs2 class="pl-1 pt-1 pb-0">{{camera.camera_name}}</div>
                                 <div @click.stop='clickFab(camera,icam)' >
                                     <v-icon v-if="!fab[icam]">menu</v-icon>
                                     <v-icon v-if="fab[icam]">close</v-icon>
@@ -173,7 +173,7 @@ export default {
             }
         },
         editCamera(camera) {
-            console.log('edit', camera.name);
+            console.log('edit', camera.camera_name);
             this.apiEdit();
         },
         zoomCamera() {
@@ -183,12 +183,12 @@ export default {
             Vue.set(this, 'fab', this.fab.map((v,iv)=>iv === i ? !v : v));
         },
         clickCamera(camera) {
-            console.log("clickCamera", camera.name);
+            console.log("clickCamera", camera.camera_name);
         },
         refreshCameras() {
             var rnd = Math.random();
             this.cameras.forEach(camera => {
-                Vue.set(camera, 'url', `http://localhost:${camera.stream_port}/?r=${rnd}`);
+                Vue.set(camera, 'url', `http://${location.hostname}:${camera.stream_port}/?r=${rnd}`);
             });
         },
         toggleCamera() {
@@ -213,6 +213,9 @@ export default {
             });
         },
         stopCamera() {
+            this.cameras.forEach(camera => {
+                Vue.set(camera, 'url', null);
+            });
             var url = [this.restOrigin(),this.service,"camera", "stop"].join("/");
             Vue.set(this.rbResource, 'httpErr', null);
             return this.$http.post(url, "nodata").then(r => {
@@ -220,6 +223,7 @@ export default {
                 return r;
             }).catch(err => {
                 Vue.set(this.rbResource, 'httpErr', err);
+                this.alertError(`Error stopping cameras: ${err.message}`);
             });
         },
     },

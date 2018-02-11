@@ -1,7 +1,7 @@
 <template>
 
 <v-app id="dev-app" >
-   <v-navigation-drawer persistent light v-model="drawer" light>
+   <v-navigation-drawer persistent absolute v-model="drawer" enable-resize-watcher app>
       <v-list dense>
         <div v-for="(item,i) in sidebarMain" :key="i">
           <v-list-tile exact :to="item.href">
@@ -60,7 +60,7 @@
         </v-list-group>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar fixed flat class="black" >
+    <v-toolbar app fixed flat class="black" >
         <v-toolbar-side-icon dark @click.stop="drawer = !drawer"></v-toolbar-side-icon>
         <v-toolbar-title class="grey--text text--lighten-1">
             <div style="display:flex; flex-flow:column; ">
@@ -71,9 +71,12 @@
         <v-spacer/>
         <rb-web-socket/>
     </v-toolbar>
-    <main>
-        <v-container fluid> <router-view/> </v-container>
-    </main>
+    <v-content >
+        <v-container fluid style="padding-right:1em">
+            <router-view> </router-view>
+        </v-container>
+    </v-content>
+    <rb-alerts ></rb-alerts>
 </v-app>
 
 </template> 

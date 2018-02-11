@@ -76,9 +76,9 @@
             camera_id: 1,
             framesize: '640x480',
             input: -1,
-            movie_filename: 'CAM1_%v-%Y%m%d%H%M%S',
-            picture_filename: 'CAM1_%v-%Y%m%d%H%M%S-%q',
-            snapshot_filename: 'CAM1_%v-%Y%m%d%H%M%S-snapshot',
+            movie_filename: 'CAM1-%Y%m%d-%H%M%S',
+            picture_filename: 'CAM1-%Y%m%d-%H%M%S-%q',
+            snapshot_filename: 'CAM1-%Y%m%d-%H%M%S-snapshot',
             stream_port: 8091,
         });
     });
@@ -430,14 +430,17 @@
             '/dev/video0': {
                 filepath: '/dev/video0',
                 signature: 'redcamera',
+                framesizes: ['640x480'],
             },
             '/dev/video1': {
                 filepath: '/dev/video1',
                 signature: 'bluecamera',
+                framesizes: ['640x480'],
             },
             '/dev/video2': {
                 filepath: '/dev/video2',
                 signature: 'greencamera',
+                framesizes: ['640x480'],
             },
         };
         mc.bindDevices(devices);
@@ -492,6 +495,7 @@
         newDevices['/dev/video3'] = {
             filepath: '/dev/video3',
             signature: 'yellowcamera',
+            framesizes: ['640x480'],
         };
         mc.bindDevices(newDevices);
         for (var i=0; i<oldCameras.length; i++) {

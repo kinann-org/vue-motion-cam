@@ -72,7 +72,9 @@
                     apiModel.cameras[0].videodevice.should.equal("/dev/video0");
                     // returned apiModel should be default 
                     apiModel.motion.should.properties(DEFAULT_APIMODEL.motion);
-                    apiModel.cameras[0].should.properties(DEFAULT_APIMODEL.cameras[0]);
+                    var expected = Object.assign({}, DEFAULT_APIMODEL.cameras[0]);
+                    delete expected.framesize; // varies
+                    apiModel.cameras[0].should.properties(expected);
                     should.ok(apiModel);
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
                 done();

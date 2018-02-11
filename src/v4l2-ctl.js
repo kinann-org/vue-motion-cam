@@ -102,11 +102,12 @@
                             var detail = yield that.describeDevice(device.filepath)
                                 .then(r=>async.next(r)).catch(e=>async.throw(e));
                             Object.assign(device, detail);
+                            winston.info(`V4L2Ctl.listDevices() ${device.signature} ${device.filepath}`);
                         }
 
                         var oDevices = devices.reduce((a,d) => ((a[d.filepath]=d),a), {});
                         resolve(oDevices);
-                        } catch (err) {
+                    } catch (err) {
                         winston.error(err.stack);
                         reject(err);
                     }

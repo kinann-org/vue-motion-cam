@@ -235,7 +235,7 @@
                         var r = yield that._spawnMotion().then(r=>async.next(r)).catch(e=>async.throw(e));
                         resolve(r);
                     } catch (err) {
-                        winston.err(`MotionConf.startCamera()`, err.stack);
+                        winston.error(`MotionConf.startCamera()`, err.stack);
                         reject(err);
                     }
                 }();
@@ -259,7 +259,7 @@
                 var nExpected = this.cameras.reduce((a,c) => (c.stream_port ? a+1:a), 0);
                 winston.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
                 return nExpected === this.nStreams ? Spawner.LINE_RESOLVE : Spawner.LINE_INFO;
-            } else if (line.match(/Waiting for threads to finish/)) {
+            } else if (line.match(/Started motion-stream server in port/)) {
                 this.status = this.STATUS_OPEN;
                 this.statusText = line;
                 this.nStreams++;
@@ -287,7 +287,7 @@
             }
             that.status = that.STATUS_UNKNOWN;
             that.nStreams = 0;
-            winston.info("MotionConf._spqnMotion", cmd);
+            winston.info(`MotionConf._spawnMotion() ${cmd}`);
             return that.spawner.spawn(cmd);
         }
 
@@ -316,9 +316,9 @@
             return {
                 camera_id: id,
                 input: -1,
-                movie_filename: `${cam}_%v-%Y%m%d%H%M%S`,
-                picture_filename: `${cam}_%v-%Y%m%d%H%M%S-%q`,
-                snapshot_filename: `${cam}_%v-%Y%m%d%H%M%S-snapshot`,
+                movie_filename: `${cam}-%Y%m%d-%H%M%S`,
+                picture_filename: `${cam}-%Y%m%d-%H%M%S-%q`,
+                snapshot_filename: `${cam}-%Y%m%d-%H%M%S-snapshot`,
                 stream_port: id + this.motion.webcontrol_port,
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,
@@ -337,30 +337,33 @@
             var devpaths = Object.keys(devices);
             devpaths.forEach((dp, i) => {
                 var device = devices[dp];
-                var camera = cameras.filter(c => (c.signature === device.signature))[0];
-                camera = camera || cameras.filter(c => 
-                    c.signature == null && c.videodevice === device.filepath)[0];
-                if (camera == null) { // not found
-                    camera = this.defaultCamera(cameras.length+1);
-                    cameras.push(camera);
-                }
-                var width = camera.framesize.split("x")[0];
-                var height = camera.framesize.split("x")[1];
-                var s = null;
-                if (s = device.framesizes.find(s => camera.framesize === s)) {
-                    winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize ok:${s}`);
-                } else if (s = device.framesizes.find(s => 0<s.indexOf('x'+height))) {
-                    winston.info(`MotionConf.bindDevices() ${camera.camera_name} setting framesize from height: ${s}`);
-                    camera.framesize = s;
+                if (!device.framesizes) {
+                    winston.warn("skipping unknown device (no framesizes):", device);
                 } else {
-                    camera.framesize = device.framesizes[0];
-                    winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize is now: ${camera.framesize}`);
+                    var camera = cameras.filter(c => (c.signature === device.signature))[0];
+                    camera = camera || cameras.filter(c => 
+                        c.signature == null && c.videodevice === device.filepath)[0];
+                    if (camera == null) { // not found
+                        camera = this.defaultCamera(cameras.length+1);
+                        cameras.push(camera);
+                    }
+                    var width = camera.framesize.split("x")[0];
+                    var height = camera.framesize.split("x")[1];
+                    var s = null;
+                    if (s = device.framesizes.find(s => camera.framesize === s)) {
+                        winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize ok:${s}`);
+                    } else if (s = device.framesizes.find(s => 0<s.indexOf('x'+height))) {
+                        winston.info(`MotionConf.bindDevices() ${camera.camera_name} setting framesize from height: ${s}`);
+                        camera.framesize = s;
+                    } else {
+                        camera.framesize = device.framesizes[0];
+                        winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize is now: ${camera.framesize}`);
+                    }
+                    camera.videodevice = device.filepath;
+                    camera.signature = device.signature;
+                    camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
+                    camera.camera_name = camera.camera_name || `CAM${camera.camera_id}`;
                 }
-                console.log("camera.framesize", camera.framesize);
-                camera.videodevice = device.filepath;
-                camera.signature = device.signature;
-                camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
-                camera.camera_name = camera.camera_name || `CAM${camera.camera_id}`;
             });
         }
 
