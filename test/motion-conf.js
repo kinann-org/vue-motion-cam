@@ -24,6 +24,8 @@
         picture_type: "jpeg",
         quality: 100,
         //process_id_file: path.join(confDir, "pid-test.txt"),
+        snapshot_filename: `snap-%Y%m%d-%H%M%S-%$`,
+        snapshot_interval: 3600, // every hour
         stream_localhost: "on",
         stream_maxrate: 10,
         stream_quality: 50,
@@ -78,7 +80,6 @@
             input: -1,
             movie_filename: 'CAM1-%Y%m%d-%H%M%S',
             picture_filename: 'CAM1-%Y%m%d-%H%M%S-%q',
-            snapshot_filename: 'CAM1-%Y%m%d-%H%M%S-snapshot',
             stream_port: 8091,
         });
     });
@@ -210,7 +211,7 @@
         conf.should.match(/\ncontrol_port\t8090\n/);
         conf.should.match(/\nthread\t.*camera1.conf\n/);
     });
-    it("TESTTESTmotionConf() returns text for motion.conf version 3.2.12", function() {
+    it("motionConf() returns text for motion.conf version 3.2.12", function() {
         // version 3.2.12 stream
         var mc = new MotionConf({
             version: "3.2.12",
@@ -327,7 +328,7 @@
         conf[2].should.match(/\nwebcam_port\t8073\n/);  // v3.2
         conf[2].should.not.match(/\nstream_port\t8073\n/);  // v4
     });
-    it("TESTTESTwriteConf() writes configuration file", function(done) {
+    it("writeConf() writes configuration file", function(done) {
         var async = function*() {
             try {
                 var mc = new MotionConf(confOpts);
@@ -407,7 +408,7 @@
         }();
         async.next();
     });
-    it("TESTTESTbindDevices() binds current devices to saved cameras", function() {
+    it("bindDevices() binds current devices to saved cameras", function() {
         const webcontrol_port = 9100;
         const mc = new MotionConf({
             motion: { webcontrol_port },

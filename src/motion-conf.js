@@ -49,6 +49,9 @@
                 stream_localhost: "on",
                 stream_maxrate: 10,
                 stream_quality: 50,
+                snapshot_filename: `%Y%m%d-%H%M%S-snap`,
+                //snapshot_interval: 3600, // every hour
+                snapshot_interval: 10, // TODO
                 //target_dir: motionDir,
                 webcontrol_html_output: "on",
                 webcontrol_localhost: "on",
@@ -318,7 +321,6 @@
                 input: -1,
                 movie_filename: `${cam}-%Y%m%d-%H%M%S`,
                 picture_filename: `${cam}-%Y%m%d-%H%M%S-%q`,
-                snapshot_filename: `${cam}-%Y%m%d-%H%M%S-snapshot`,
                 stream_port: id + this.motion.webcontrol_port,
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,

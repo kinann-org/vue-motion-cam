@@ -79,6 +79,8 @@
                                     :items="stream_rate" item-text='text' item-value='value'
                                     v-if="apiModelCopy.usage !== 'custom'"
                                     label="Streaming rate" class="input-group" ></v-select>
+                                <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
+                                    label="snapshot_interval" class="input-group" />
                                 <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
                                     v-if="apiModelCopy.usage === 'custom'"
                                     label="stream_maxrate" class="input-group" />
