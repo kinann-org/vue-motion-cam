@@ -24,7 +24,7 @@
         picture_type: "jpeg",
         quality: 100,
         //process_id_file: path.join(confDir, "pid-test.txt"),
-        snapshot_filename: `snap-%Y%m%d-%H%M%S-%$`,
+        snapshot_filename: `%Y%m%d-%H%M%S-snap`,
         snapshot_interval: 3600, // every hour
         stream_localhost: "on",
         stream_maxrate: 10,
