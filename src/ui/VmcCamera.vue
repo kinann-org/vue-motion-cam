@@ -26,26 +26,15 @@
                     </div>
                     <div v-for="(camera,icam) in cameras" :key="icam" class='vmc-feed ' >
                         <div class="vmc-feed-actions">
-                                <div xs-2 offset-xs2 class="pl-1 pt-1 pb-0">{{camera.camera_name}}</div>
-                                <div @click.stop='clickFab(camera,icam)' >
-                                    <v-icon v-if="!fab[icam]">menu</v-icon>
-                                    <v-icon v-if="fab[icam]">close</v-icon>
-                                </div>
-                                <v-speed-dial v-model="fab[icam]" direction='bottom' 
-                                    absolute
-                                    transition="slide-y-reverse-transition"
-                                    style='z-index:999; right: 12px; top: 25px;'
-                                >
-                                    <v-btn fab dark small class="green" @click='editCamera(camera)' >
-                                        <v-icon>edit</v-icon>
-                                    </v-btn>
-                                    <v-btn fab dark small class="indigo" >
-                                        <v-icon>add</v-icon>
-                                    </v-btn>
-                                    <v-btn fab dark small class="red" >
-                                        <v-icon>delete</v-icon>
-                                    </v-btn>
-                                </v-speed-dial>
+                            <div xs-2 offset-xs2 class="pl-1 pt-2 pb-0">{{camera.camera_name}}</div>
+                            <v-menu offset-y>
+                              <v-btn small slot=activator icon><v-icon>menu</v-icon></v-btn>
+                              <v-list>
+                                <v-list-tile @click="editCamera(camera)">
+                                  <v-list-tile-title>Edit camera settings</v-list-tile-title>
+                                </v-list-tile>
+                              </v-list>
+                            </v-menu>
                         </div>
                         <div @click='clickCamera(camera)' 
                             :style='`height:${imgHeight};width:${imgWidth}`'

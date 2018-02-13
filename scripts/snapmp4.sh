@@ -40,25 +40,25 @@ END=$2 #exclusive
 
 for i in $( ls $DIR ); do
     if [[ "$START" && "$i" < "$START" ]]; then
-        if [ $VERBOSE ]; then sleep 0; fi # dummy
+        if [ "$VERBOSE" = "1" ]; then sleep 0; fi # dummy
     elif [[ "$END" != "" && "$END" < "$i" ]]; then
-        if [ $VERBOSE ]; then sleep 0; fi # dummy
+        if [ "$VERBOSE" = "1" ]; then sleep 0; fi # dummy
     else
-        if [ $VERBOSE ]; then echo -e "image\t: $i"; fi
+        if [ "$VERBOSE" = "1" ]; then echo -e "image\t: $i"; fi
         ln -s `realpath "$DIR/$i"` "$TMPDIR/$i"
         RC=$?; if [ "$RC" != "0" ]; then exit $RC; fi
     fi
 done
 
-if [ $VERBOSE ]; then echo -e "OUT\t: $OUT"; fi
-if [ $VERBOSE ]; then echo -e "DIR\t: $DIR"; fi
-if [ $VERBOSE ]; then echo -e "START\t: $START"; fi
-if [ $VERBOSE ]; then echo -e "END\t: $END"; fi
-if [ $VERBOSE ]; then echo -e "SIZE\t: $SIZE"; fi
-if [ $VERBOSE ]; then echo -e "FPS\t: $FPS"; fi
+if [ "$VERBOSE" = "1" ]; then echo -e "OUT\t: $OUT"; fi
+if [ "$VERBOSE" = "1" ]; then echo -e "DIR\t: $DIR"; fi
+if [ "$VERBOSE" = "1" ]; then echo -e "START\t: $START"; fi
+if [ "$VERBOSE" = "1" ]; then echo -e "END\t: $END"; fi
+if [ "$VERBOSE" = "1" ]; then echo -e "SIZE\t: $SIZE"; fi
+if [ "$VERBOSE" = "1" ]; then echo -e "FPS\t: $FPS"; fi
 
 cd $TMPDIR
-ffmpeg -r $FPS -f image2 -s $SIZE -pattern_type glob -i "*.jpg" -vcodec libx264 -crf 25  -pix_fmt yuv420p "$OUT"
+ffmpeg -y -r $FPS -f image2 -s $SIZE -pattern_type glob -i "*.jpg" -vcodec libx264 -crf 25  -pix_fmt yuv420p "$OUT"
 RC=$?; if [ "$RC" != "0" ]; then exit $RC; fi
 echo $OUT
 exit 0

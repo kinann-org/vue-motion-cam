@@ -50,8 +50,7 @@
                 stream_maxrate: 10,
                 stream_quality: 50,
                 snapshot_filename: `%Y%m%d-%H%M%S-snap`,
-                //snapshot_interval: 3600, // every hour
-                snapshot_interval: 10, // TODO
+                snapshot_interval: 3600, // every hour
                 //target_dir: motionDir,
                 webcontrol_html_output: "on",
                 webcontrol_localhost: "on",

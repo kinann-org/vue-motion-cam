@@ -1,0 +1,184 @@
+(typeof describe === 'function') && describe("Timelapse", function() {
+    const should = require("should");
+    const fs = require('fs');
+    const winston = require('winston');
+    const appdir = process.cwd();
+    const path = require("path");
+    const motionDir = path.join(appdir, ".motion");
+    const {
+        Timelapse,
+        MotionConf,
+    } = require('../index');
+    const today = new Date();
+    today.setHours(0);
+    today.setMinutes(0);
+    today.setSeconds(0,0);
+    var mcDefault = new MotionConf();
+
+    it("TESTTESToptions() returns default ctor options", function() {
+        should.deepEqual(Timelapse.options(), {
+            snapshot_interval: mcDefault.motion.snapshot_interval,
+            camera_name: mcDefault.cameras[0].camera_name,
+            image_dir: path.join(motionDir, "CAM1"),
+            days: 1,
+            start_date: today,
+            end_date: new Date(today.getTime()+24*3600*1000),
+            framerate_min: 1,
+            framerate_max: 60,
+            framerate: 2.4,
+            framesize: "640x480",
+            movie_duration: 10,
+            output: 'timelapse.mp4',
+        });
+    });
+    it("TESTTESToptions({days:...}) determines default end_date", function() {
+        var days = 10;
+        should(Timelapse.options({
+            days,
+        })).properties({
+            start_date: today,
+            end_date: new Date(today.getTime() + days*24*3600*1000),
+        });
+    });
+    it("TESTTESToptions() adjusts framerate based on movie_duration", function() {
+        should(Timelapse.options({
+            movie_duration: 5,
+        })).properties({
+            framerate: 4.8,
+            movie_duration: 5,
+        });
+        should(Timelapse.options({
+            movie_duration: 1,
+        })).properties({
+            framerate: 24,
+            movie_duration: 1,
+        });
+
+        // movie_duration can be affected by framerate_min
+        should(Timelapse.options({
+            movie_duration: 100, 
+        })).properties({
+            framerate_min: 1,
+            framerate: 1,
+            movie_duration: 24,
+        });
+        should(Timelapse.options({
+            movie_duration: 100,
+            framerate_min: 0.1,
+        })).properties({
+            framerate_min: 0.1,
+            framerate: 0.24,
+            movie_duration: 100,
+        });
+
+        // movie_duration can be affected by framerate_max
+        should(Timelapse.options({
+            snapshot_interval: 60,
+            movie_duration: 10,
+        })).properties({
+            framerate_max: 60,
+            framerate: 60,
+            movie_duration: 24,
+        });
+        should(Timelapse.options({
+            framerate_max: 150,
+            snapshot_interval: 60,
+            movie_duration: 10,
+        })).properties({
+            framerate_max: 150,
+            framerate: 144,
+            movie_duration: 10,
+        });
+    });
+    it("TESTTESToptions() has motionConf option", function() {
+        var framesize = "848x640";
+        var motionConf = new MotionConf({
+            motion: {
+                snapshot_interval: 60,
+            },
+            cameras: [{
+                camera_name: "laptopcam",
+                framesize,
+            }],
+        });
+        should.deepEqual(Timelapse.options({
+            motionConf,
+        }), {
+            camera_name: "laptopcam",
+            days: 1,
+            end_date: new Date(today.getTime()+24*3600*1000),
+            framerate: 60,
+            framerate_max: 60,
+            framerate_min: 1,
+            framesize,
+            image_dir: path.join(motionDir, "laptopcam"),
+            movie_duration: 24,
+            output: 'timelapse.mp4',
+            snapshot_interval: 60,
+            start_date: today,
+
+        });
+    });
+    it("TESTTESTcreateCommand() builds timelapse command line", function() {
+        var snapshot_interval = 10;
+        var start_date = new Date(2018,1,12,11,45,10);
+        var end_date = new Date(2018,1,12,11,46,10);
+        var output = '/tmp/timelapse.mp4';
+        var image_dir = path.join(__dirname, '..', 'test', 'CAM1');
+        var framerate = 3;
+        var timelapse = new Timelapse({
+            start_date,
+            end_date,
+            snapshot_interval,
+            image_dir,
+            framesize: "848x640",
+            framerate, // overrides movie_duration
+            output,
+        });
+        should(timelapse).properties({
+            framerate,
+            movie_duration: 2,
+        });
+        var cmd = timelapse.createCommand();
+        var snapmp4 = path.join(__dirname, '..', 'scripts', 'snapmp4.sh');
+        should(cmd).match(new RegExp(snapmp4, "m"));
+        should(cmd).match(new RegExp(`-d ${image_dir}`, "m"));
+        should(cmd).match(new RegExp(`-f ${framerate}`, "m"));
+        should(cmd).match(new RegExp(`-s 848x640`, "m"));
+        should(cmd).match(new RegExp(`-o ${output}`, "m"));
+        should(cmd).match(/20180212-114510-snap.jpg 20180212-114610-snap.jpg/m);
+    });
+    it("TESTTESTcreateMovie() returns filepath of created timelapse", function(done) {
+        (async function() {
+            try {
+                var start_date = new Date(2018,1,12,11,45,10);
+                var end_date = new Date(2018,1,12,11,46,10);
+                var output = '/tmp/timelapse.mp4';
+                var image_dir = path.join(__dirname, '..', 'test', 'CAM1');
+                var timelapse = new Timelapse({
+                    snapshot_interval: 10,
+                    start_date,
+                    end_date,
+                    framesize: "848x640",
+                    framerate: 3,
+                    image_dir,
+                    output,
+                });
+                if (fs.existsSync(output)) {
+                    fs.unlinkSync(output);
+                }
+                winston.info(timelapse.createCommand());
+                var result = await timelapse.createMovie();
+                should(result).equal(output);
+                should(fs.statSync(result)).properties({
+                    size: 56992,
+                });
+                done();
+            } catch(e) {
+                winston.error(e.stack);
+                done(e);
+            }
+        })();
+        
+    });
+})
