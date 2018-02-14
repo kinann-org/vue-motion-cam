@@ -1,4 +1,5 @@
 (function(exports) {
+    const express = require('express');
     const winston = require('winston');
     const srcPkg = require("../package.json");
     const path = require("path");
@@ -6,6 +7,8 @@
     const Timelapse = require("./timelapse");
     const V4L2Ctl = require("./v4l2-ctl");
     const rb = require("rest-bundle");
+    const appdir = process.cwd();
+    const motionDir = path.join(appdir, ".motion");
 
     class VmcBundle extends rb.RestBundle {
         constructor(name = "test", options = {}) {
@@ -103,6 +106,12 @@
             });
         }
 
+        bindExpress(rootApp, restHandlers = this.handlers) {
+            super.bindExpress(rootApp, restHandlers);
+            this.app.use("/motion", express.static(motionDir));
+            return this;
+        }
+
         getDevices(req, res, next) {
             var that = this;
             return new V4L2Ctl().listDevices().then(r => (that.devices=r));
@@ -135,13 +144,29 @@
                 try {
                     var opts = req.body || {};
                     // only allow safe subset of properties
+                    var camera_name = opts.camera_name;
+                    var start_date = opts.start_date;
+                    var end_date = opts.end_date;
                     var timelapse = new Timelapse({
                         motionConf: this.motionConf,
-                        camera_name: opts.camera_name,
-                        start_date: opts.start_date,
-                        end_date: opts.end_date,
+                        camera_name,
+                        start_date,
+                        end_date,
                     });
-                    resolve(timelapse);
+                    timelapse.createMovie().then(mp4FilePath => {
+                        var result = {
+                            movie_duration: timelapse.movie_duration,
+                            movie_url: `/${this.name}/motion/${camera_name}/timelapse.mp4`,
+                            start_date,
+                            end_date,
+                            framerate: timelapse.framerate,
+                            framesize: timelapse.framesize,
+                        }
+                        resolve(result);
+                    }).catch(e => {
+                        winston.error("VmcBundle.postTimelapse()", e.stack);
+                        reject(e);
+                    });
                 } catch (e) {
                     winston.error("VmcBundle.postTimelapse()", e.stack);
                     reject(e);
