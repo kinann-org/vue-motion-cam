@@ -49,18 +49,16 @@
                     movie_duration = nImages/framerate;
                 }
             }
+            var image_dir = opts.image_dir || path.join(mc.confDir, camName);
             return Object.assign({}, {
                 snapshot_interval,
                 camera_name: camName,
-                image_dir: opts.image_dir || path.join(mc.confDir, camName),
-                days,
+                image_dir,
                 start_date,
                 end_date,
-                framerate_min,
-                framerate_max,
                 framerate,
                 framesize: opts.framesize || cam.framesize || "640x480",
-                output: opts.output || 'timelapse.mp4',
+                output: opts.output || path.join(image_dir, 'timelapse.mp4'),
                 movie_duration: movie_duration,
             });
         }
@@ -92,6 +90,7 @@
             return new Promise((resolve, reject) => {
                 try {
                     var cmd = this.createCommand();
+                    winston.info("VmcBundle.createMovie() ", cmd);
                     exec(cmd, {
                         shell: '/bin/bash',
                     },(error, stdout, stderr) => {

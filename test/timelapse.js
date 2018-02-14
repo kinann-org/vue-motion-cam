@@ -16,19 +16,17 @@
     var mcDefault = new MotionConf();
 
     it("TESTTESToptions() returns default ctor options", function() {
+        var camera_name = mcDefault.cameras[0].camera_name;
         should.deepEqual(Timelapse.options(), {
             snapshot_interval: mcDefault.motion.snapshot_interval,
-            camera_name: mcDefault.cameras[0].camera_name,
+            camera_name,
             image_dir: path.join(motionDir, "CAM1"),
-            days: 1,
             start_date: today,
             end_date: new Date(today.getTime()+24*3600*1000),
-            framerate_min: 1,
-            framerate_max: 60,
             framerate: 2.4,
             framesize: "640x480",
             movie_duration: 10,
-            output: 'timelapse.mp4',
+            output: path.join(motionDir, camera_name, 'timelapse.mp4'),
         });
     });
     it("TESTTESToptions({days:...}) determines default end_date", function() {
@@ -58,7 +56,6 @@
         should(Timelapse.options({
             movie_duration: 100, 
         })).properties({
-            framerate_min: 1,
             framerate: 1,
             movie_duration: 24,
         });
@@ -66,7 +63,6 @@
             movie_duration: 100,
             framerate_min: 0.1,
         })).properties({
-            framerate_min: 0.1,
             framerate: 0.24,
             movie_duration: 100,
         });
@@ -76,7 +72,6 @@
             snapshot_interval: 60,
             movie_duration: 10,
         })).properties({
-            framerate_max: 60,
             framerate: 60,
             movie_duration: 24,
         });
@@ -85,35 +80,32 @@
             snapshot_interval: 60,
             movie_duration: 10,
         })).properties({
-            framerate_max: 150,
             framerate: 144,
             movie_duration: 10,
         });
     });
     it("TESTTESToptions() has motionConf option", function() {
         var framesize = "848x640";
+        var camera_name = "laptopcam";
         var motionConf = new MotionConf({
             motion: {
                 snapshot_interval: 60,
             },
             cameras: [{
-                camera_name: "laptopcam",
+                camera_name,
                 framesize,
             }],
         });
         should.deepEqual(Timelapse.options({
             motionConf,
         }), {
-            camera_name: "laptopcam",
-            days: 1,
+            camera_name,
             end_date: new Date(today.getTime()+24*3600*1000),
             framerate: 60,
-            framerate_max: 60,
-            framerate_min: 1,
             framesize,
-            image_dir: path.join(motionDir, "laptopcam"),
+            image_dir: path.join(motionDir, camera_name),
             movie_duration: 24,
-            output: 'timelapse.mp4',
+            output: path.join(motionDir, camera_name, 'timelapse.mp4'),
             snapshot_interval: 60,
             start_date: today,
 

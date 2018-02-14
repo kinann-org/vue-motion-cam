@@ -33,6 +33,12 @@
                                 <v-list-tile @click="editCamera(camera)">
                                   <v-list-tile-title>Edit camera settings</v-list-tile-title>
                                 </v-list-tile>
+                                <v-list-tile @click="timelapse(camera,7)">
+                                  <v-list-tile-title>Timelapse (week)</v-list-tile-title>
+                                </v-list-tile>
+                                <v-list-tile @click="timelapse(camera,30)">
+                                  <v-list-tile-title>Timelapse< (month)</v-list-tile-title>
+                                </v-list-tile>
                               </v-list>
                             </v-menu>
                         </div>
@@ -215,6 +221,26 @@ export default {
             }).catch(err => {
                 Vue.set(this.rbResource, 'httpErr', err);
                 this.alertError(`Error stopping cameras: ${err.message}`);
+            });
+        },
+        timelapse(camera, days) {
+            var url = [this.restOrigin(), this.service, "timelapse"].join("/");
+            var today = new Date();
+            today.setHours(0);
+            today.setMinutes(0);
+            today.setSeconds(0);
+            var end_date = new Date(today.getTime() + 24*3600*1000);
+            var start_date = new Date(end_date.getTime() - days*24*3600*1000);
+            var opts = {
+                camera_name: camera.camera_name,
+                framesize: camera.framesize,
+                start_date,
+                end_date,
+            };
+            return this.$http.post(url, opts).then(r => {
+                this.alertSuccess(r.data);
+            }).catch(err => {
+                this.alertError(`Timelapse error: ${err.message}`);
             });
         },
     },

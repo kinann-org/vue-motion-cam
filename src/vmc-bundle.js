@@ -3,6 +3,7 @@
     const srcPkg = require("../package.json");
     const path = require("path");
     const MotionConf = require("./motion-conf");
+    const Timelapse = require("./timelapse");
     const V4L2Ctl = require("./v4l2-ctl");
     const rb = require("rest-bundle");
 
@@ -19,6 +20,7 @@
                     this.resourceMethod("put", "motion-conf", this.putMotionConf),
                     this.resourceMethod("post", "camera/start", this.postCameraStart),
                     this.resourceMethod("post", "camera/stop", this.postCameraStop),
+                    this.resourceMethod("post", "timelapse", this.postTimelapse),
                 ]),
             });
             this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
@@ -125,6 +127,25 @@
                     winston.error(err.stack);
                     reject(err);
                 });
+            });
+        }
+
+        postTimelapse(req, res, next) {
+            return new Promise((resolve, reject) => {
+                try {
+                    var opts = req.body || {};
+                    // only allow safe subset of properties
+                    var timelapse = new Timelapse({
+                        motionConf: this.motionConf,
+                        camera_name: opts.camera_name,
+                        start_date: opts.start_date,
+                        end_date: opts.end_date,
+                    });
+                    resolve(timelapse);
+                } catch (e) {
+                    winston.error("VmcBundle.postTimelapse()", e.stack);
+                    reject(e);
+                }
             });
         }
 
