@@ -8,113 +8,99 @@
         <rb-about-item name="service" value="test" slot="prop">RestBundle name</rb-about-item>
     </rb-about>
 
-    <v-card flat hover>
-        <v-card-text>
-            <div class="vmc-frame">
-                <div class="vmc-container">
-                    <div class="vmc-commands" xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
-                        <v-btn light flat icon @click="toggleCamera()" >
-                            <v-icon v-show="streaming === false" >videocam</v-icon>
-                            <v-icon v-show="streaming === true" 
-                                style="border: 1pt solid red; border-radius: 7px;"
-                                >videocam_off</v-icon>
-                            <v-icon v-show="streaming == null" >hourglass_full</v-icon>
-                        </v-btn>
-                        <v-btn light flat icon @click="zoomCamera()" >
-                            <v-icon >zoom_in</v-icon>
-                        </v-btn>
-                    </div>
-                    <div v-for="(camera,icam) in cameras" :key="icam" class='vmc-feed ' >
-                        <div class="vmc-feed-actions">
-                            <div xs-2 offset-xs2 class="pl-1 pt-2 pb-0">{{camera.camera_name}}</div>
-                            <v-menu offset-y>
-                              <v-btn small slot=activator icon><v-icon>menu</v-icon></v-btn>
-                              <v-list>
-                                <v-list-tile @click="editCamera(camera)">
-                                  <v-list-tile-title>Edit camera settings</v-list-tile-title>
-                                </v-list-tile>
-                                <v-list-tile @click="timelapse(camera,7)">
-                                  <v-list-tile-title>Timelapse (week)</v-list-tile-title>
-                                </v-list-tile>
-                                <v-list-tile @click="timelapse(camera,30)">
-                                  <v-list-tile-title>Timelapse< (month)</v-list-tile-title>
-                                </v-list-tile>
-                              </v-list>
-                            </v-menu>
-                        </div>
-                        <div @click='clickCamera(camera)' 
-                            :style='`height:${imgHeight};width:${imgWidth}`'
+    <div class="vmc-frame">
+        <div class="vmc-container">
+            <div class="vmc-commands" xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
+                <v-btn light flat icon @click="toggleCamera()" >
+                    <v-icon v-show="streaming === false" >videocam</v-icon>
+                    <v-icon v-show="streaming === true" 
+                        style="border: 1pt solid red; border-radius: 7px;"
+                        >videocam_off</v-icon>
+                    <v-icon v-show="streaming == null" >hourglass_full</v-icon>
+                </v-btn>
+                <v-btn light flat icon @click="zoomCamera()" >
+                    <v-icon >zoom_in</v-icon>
+                </v-btn>
+            </div>
+            <div v-for="(camera,icam) in cameras" :key="icam" class='vmc-feed ' >
+                <div class="vmc-feed-actions">
+                    <div xs-2 offset-xs2 class="pl-1 pt-2 pb-0">{{camera.camera_name}}</div>
+                    <v-menu offset-y>
+                      <v-btn small slot=activator icon><v-icon>menu</v-icon></v-btn>
+                      <v-list>
+                        <v-list-tile @click="editCamera(camera)">
+                          <v-list-tile-title>Edit camera settings</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile @click="timelapse(camera,7)">
+                          <v-list-tile-title>Timelapse (week)</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile @click="timelapse(camera,30)">
+                          <v-list-tile-title>Timelapse< (month)</v-list-tile-title>
+                        </v-list-tile>
+                      </v-list>
+                    </v-menu>
+                </div>
+                <div @click='clickCamera(camera)' 
+                    :style='`height:${imgHeight};width:${imgWidth}`'
+                >
+                    <img v-if='streaming && camera.stream_port' :src="camera.url" 
+                        :style='`height:${imgHeight};width:${imgWidth}`'
+                        />
+                    <div v-if='!streaming || camera.stream_port==null'
+                        :style='`height:${imgHeight};width:${imgWidth};`'
+                        dark class='vmc-img-placeholder'
                         >
-                            <img v-if='streaming && camera.stream_port' :src="camera.url" 
-                                :style='`height:${imgHeight};width:${imgWidth}`'
-                                />
-                            <div v-if='!streaming || camera.stream_port==null'
-                                :style='`height:${imgHeight};width:${imgWidth};`'
-                                dark class='vmc-img-placeholder'
-                                >
-                                <div v-if='!streaming && camera.stream_port'
-                                    ><v-icon>visibility_off</v-icon></div>
-                                <div v-if='camera.stream_port == null'
-                                    >No device</div>
-                            </div>
-
-                        </div>
-                        <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash">
-                            <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
-                            <rb-dialog-row label="Motion API">
-                                <v-text-field v-model='apiModelCopy.version' 
-                                    label="Version" disabled class="input-group" />
-                                <v-select v-model='apiModelCopy.usage' 
-                                    :items="usages" item-text='text' item-value='value'
-                                    label="Usage" class="input-group" ></v-select>
-                                <v-select v-model='apiModelCopy.motion.stream_localhost' 
-                                    :items="localhost_items" item-text='text' item-value='value'
-                                    label="Camera streaming" class="input-group" ></v-select>
-                                <v-select v-model='apiModelCopy.motion.stream_maxrate' 
-                                    :items="stream_rate" item-text='text' item-value='value'
-                                    v-if="apiModelCopy.usage !== 'custom'"
-                                    label="Streaming rate" class="input-group" ></v-select>
-                                <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
-                                    label="Snapshot/timelapse interval" class="input-group" />
-                                <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
-                                    v-if="apiModelCopy.usage === 'custom'"
-                                    label="stream_maxrate" class="input-group" />
-                                <v-select v-model='apiModelCopy.motion.stream_quality' 
-                                    :items="stream_quality" item-text='text' item-value='value'
-                                    v-if="apiModelCopy.usage !== 'custom'"
-                                    label="Picture quality" class="input-group" ></v-select>
-                                <v-text-field v-model='apiModelCopy.motion.stream_quality' 
-                                    v-if="apiModelCopy.usage === 'custom'"
-                                    label="stream_quality" class="input-group" />
-                                <v-select v-model='apiModelCopy.motion.webcontrol_localhost' 
-                                    :items="localhost_items" item-text='text' item-value='value'
-                                    label="Web control page" class="input-group" ></v-select>
-                            </rb-dialog-row>
-                            <rb-dialog-row label="Camera">
-                                <v-text-field v-model='apiModelCopy.cameras[icam].camera_name' 
-                                    label="Name" value="Input text" class="input-group" ></v-text-field>
-                                <v-select v-model="apiModelCopy.cameras[icam].framesize" 
-                                    label="Frame Size" class="input-group"
-                                    :items="framesizes(camera)" 
-                                ></v-select>
-                            </rb-dialog-row>
-                            <rb-tree-view :data="cameraDetails(camera)" rootKey="details" initialDepth="0"/>
-                        </rb-api-dialog>
+                        <div v-if='!streaming && camera.stream_port'
+                            ><v-icon>visibility_off</v-icon></div>
+                        <div v-if='camera.stream_port == null'
+                            >No device</div>
                     </div>
-                </div> <!-- vmc-container -->
-            <!--
-            <rb-tree-view :data="rbService" :rootKey="service"/>
-            {{cameras}}
-            -->
-            </div> <!-- vmc-frame -->
-        </v-card-text>
-        <v-system-bar v-if='httpErr' 
-            v-tooltip:above='{html:`${httpErr.config.url} \u2794 HTTP${httpErr.response.status} ${httpErr.response.statusText}`}'
-            class='error' dark>
-            <span >{{httpErr.response.data.error || httpErr.response.statusText}}</span>
-        </v-system-bar>
-    </v-card>
 
+                </div>
+                <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash">
+                    <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
+                    <rb-dialog-row label="Motion API">
+                        <v-text-field v-model='apiModelCopy.version' 
+                            label="Version" disabled class="input-group" />
+                        <v-select v-model='apiModelCopy.usage' 
+                            :items="usages" item-text='text' item-value='value'
+                            label="Usage" class="input-group" ></v-select>
+                        <v-select v-model='apiModelCopy.motion.stream_localhost' 
+                            :items="localhost_items" item-text='text' item-value='value'
+                            label="Camera streaming" class="input-group" ></v-select>
+                        <v-select v-model='apiModelCopy.motion.stream_maxrate' 
+                            :items="stream_rate" item-text='text' item-value='value'
+                            v-if="apiModelCopy.usage !== 'custom'"
+                            label="Streaming rate" class="input-group" ></v-select>
+                        <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
+                            label="Snapshot/timelapse interval" class="input-group" />
+                        <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
+                            v-if="apiModelCopy.usage === 'custom'"
+                            label="stream_maxrate" class="input-group" />
+                        <v-select v-model='apiModelCopy.motion.stream_quality' 
+                            :items="stream_quality" item-text='text' item-value='value'
+                            v-if="apiModelCopy.usage !== 'custom'"
+                            label="Picture quality" class="input-group" ></v-select>
+                        <v-text-field v-model='apiModelCopy.motion.stream_quality' 
+                            v-if="apiModelCopy.usage === 'custom'"
+                            label="stream_quality" class="input-group" />
+                        <v-select v-model='apiModelCopy.motion.webcontrol_localhost' 
+                            :items="localhost_items" item-text='text' item-value='value'
+                            label="Web control page" class="input-group" ></v-select>
+                    </rb-dialog-row>
+                    <rb-dialog-row label="Camera">
+                        <v-text-field v-model='apiModelCopy.cameras[icam].camera_name' 
+                            label="Name" value="Input text" class="input-group" ></v-text-field>
+                        <v-select v-model="apiModelCopy.cameras[icam].framesize" 
+                            label="Frame Size" class="input-group"
+                            :items="framesizes(camera)" 
+                        ></v-select>
+                    </rb-dialog-row>
+                    <rb-tree-view :data="cameraDetails(camera)" rootKey="details" initialDepth="0"/>
+                </rb-api-dialog>
+            </div>
+        </div> <!-- vmc-container -->
+    </div> <!-- vmc-frame -->
 </div>
 
 </template>
