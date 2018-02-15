@@ -75,7 +75,7 @@
                                     v-if="apiModelCopy.usage !== 'custom'"
                                     label="Streaming rate" class="input-group" ></v-select>
                                 <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
-                                    label="snapshot_interval" class="input-group" />
+                                    label="Snapshot/timelapse interval" class="input-group" />
                                 <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
                                     v-if="apiModelCopy.usage === 'custom'"
                                     label="stream_maxrate" class="input-group" />
@@ -145,8 +145,11 @@ export default {
         }
     },
     methods: {
-        framesizes(camera) {
+        framesizes(camera={}) {
             var device = this.devices[camera.videodevice];
+            if (device == null) {
+                return ["(no device)"];
+            }
             return device.framesizes.reduce((a,fs) => {
                 var wh = fs.split("x");
                 var width = wh[0];
@@ -171,7 +174,9 @@ export default {
         },
         editCamera(camera) {
             console.log('edit', camera.camera_name);
-            this.apiEdit();
+            this.rbDispatch("apiLoad").then(r => {
+                this.apiEdit();
+            });
         },
         zoomCamera() {
             this.scaleIndex = (1+this.scaleIndex) % this.imageScales.length;
@@ -225,6 +230,7 @@ export default {
         },
         timelapse(camera, days) {
             var url = [this.restOrigin(), this.service, "timelapse"].join("/");
+            var mp4win = window.open("","_blank");
             var today = new Date();
             today.setHours(0);
             today.setMinutes(0);
@@ -238,7 +244,7 @@ export default {
                 end_date,
             };
             return this.$http.post(url, opts).then(r => {
-                this.alertSuccess(r.data);
+                mp4win.location = this.restOrigin()+r.data.movie_url;
             }).catch(err => {
                 this.alertError(`Timelapse error: ${err.message}`);
             });
@@ -247,14 +253,11 @@ export default {
     computed: {
         usages() {
             return [{
-                text: "Stream only (no movies) ",
+                text: "Streaming camera",
                 value: "stream",
-            },{
-                text: "Timelapse movie (watch flowers grow) ",
-                value: "timelapse",
-            },{
-                text: "Motion Capture (burglar movies)",
-                value: "motion-capture",
+            //},{
+                //text: "Motion Capture (burglar movies)",
+                //value: "motion-capture",
             },{
                 text: "Custom (run with scissors) ",
                 value: "custom",
@@ -301,7 +304,7 @@ export default {
                 text: "Restrict to localhost (most secure)",
                 value: "on",
             },{
-                text: "Allow any host (most useful)",
+                text: "Allow any host (my network is safe)",
                 value: "off",
             }];
         },
