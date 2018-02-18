@@ -57,8 +57,9 @@
                     </div>
 
                 </div>
-                <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash">
-                    <div slot="title">{{apiModelCopy.cameras[icam].name}} Settings</div>
+            </div>
+                <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash ">
+                    <div slot="title">Camera Settings </div>
                     <rb-dialog-row label="Motion API">
                         <v-text-field v-model='apiModelCopy.version' 
                             label="Version" disabled class="input-group" />
@@ -88,17 +89,18 @@
                             :items="localhost_items" item-text='text' item-value='value'
                             label="Web control page" class="input-group" ></v-select>
                     </rb-dialog-row>
-                    <rb-dialog-row label="Camera">
-                        <v-text-field v-model='apiModelCopy.cameras[icam].camera_name' 
+                    <rb-dialog-row v-for="(camera,icam) in apiModelCopy.cameras" :key="icam" label="Camera">
+                        <v-text-field v-model='camera.camera_name' 
                             label="Name" value="Input text" class="input-group" ></v-text-field>
-                        <v-select v-model="apiModelCopy.cameras[icam].framesize" 
+                        <v-select v-model="camera.framesize" 
                             label="Frame Size" class="input-group"
                             :items="framesizes(camera)" 
                         ></v-select>
                     </rb-dialog-row>
+                    <!--
                     <rb-tree-view :data="cameraDetails(camera)" rootKey="details" initialDepth="0"/>
+                    -->
                 </rb-api-dialog>
-            </div>
         </div> <!-- vmc-container -->
     </div> <!-- vmc-frame -->
 </div>
@@ -121,6 +123,7 @@ export default {
         return {
             apiEditDialog: false,
             imageScales: [0.25,0.5,1],
+            curCamera: null,
             scaleIndex: 0,
             startCount: 0,
             fab: [false, false],
@@ -136,21 +139,23 @@ export default {
             if (device == null) {
                 return ["(no device)"];
             }
-            return device.framesizes.reduce((a,fs) => {
+            var sizes = device.framesizes.reduce((a,fs) => {
                 var wh = fs.split("x");
                 var width = wh[0];
                 var height = wh[1];
-                if (width % 16 || height % 16) {
-                    return a;
-                }
+                //if (width % 16 || height % 16) {
+                    //return a;
+                //}
                 a.push(fs);
                 return a;
-            }, []).sort((a,b) => {
+            }, []);
+            sizes.sort((a,b) => {
                 var awh = a.split("x");
                 var bwh = b.split("x");
                 var cmp = awh[0] - bwh[0];
                 return cmp ? cmp : awh[1] - bwh[1];
             });
+            return sizes;
         },
         cameraDetails(camera) {
             return {
@@ -160,6 +165,7 @@ export default {
         },
         editCamera(camera) {
             console.log('edit', camera.camera_name);
+            this.curCamera = camera;
             this.rbDispatch("apiLoad").then(r => {
                 this.apiEdit();
             });

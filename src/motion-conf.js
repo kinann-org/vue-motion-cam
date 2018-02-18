@@ -333,10 +333,10 @@
             var cameras = this.cameras;
             cameras.forEach((camera,i) => {
                 camera.stream_port = null;
-                camera.camera_id = i+1;
             });
             var devpaths = Object.keys(devices);
-            devpaths.forEach((dp, i) => {
+
+            devpaths.forEach((dp, i) => { // map devices to cameras
                 var device = devices[dp];
                 if (!device.framesizes) {
                     winston.warn("skipping unknown device (no framesizes):", device);
@@ -347,6 +347,7 @@
                     if (camera == null) { // not found
                         camera = this.defaultCamera(cameras.length+1);
                         cameras.push(camera);
+                        camera.camera_name = null; // assigned later
                     }
                     var width = camera.framesize.split("x")[0];
                     var height = camera.framesize.split("x")[1];
@@ -362,8 +363,22 @@
                     }
                     camera.videodevice = device.filepath;
                     camera.signature = device.signature;
-                    camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
-                    camera.camera_name = camera.camera_name || `CAM${camera.camera_id}`;
+                    camera.stream_port = "TBD";
+                }
+            });
+            this.cameras = cameras.filter(c => c.stream_port != null); // remove unbound
+
+            this.cameras.forEach((camera,i) => { // assign id and stream_port
+                camera.camera_id = i+1;
+                camera.stream_port = camera.camera_id + this.motion.webcontrol_port;
+                var index = i+1;
+                while (!camera.camera_name) {
+                    var name = `CAM${index}`;
+                    if (this.cameras.find(c=>c.camera_name===name) == undefined) {
+                        camera.camera_name = name;
+                        break;
+                    }
+                    index++;
                 }
             });
         }

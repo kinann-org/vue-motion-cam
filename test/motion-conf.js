@@ -445,6 +445,7 @@
             },
         };
         mc.bindDevices(devices);
+
         // primary binding is on signature (e.g., 'bluecamera')
         should(mc.cameras[0].signature).equal('bluecamera');
         should(mc.cameras[0].videodevice).equal('/dev/video1');
@@ -453,43 +454,32 @@
         should(mc.cameras[1].signature).equal('redcamera');
         should(mc.cameras[1].videodevice).equal('/dev/video0'); 
 
-        // unbound cameras have no stream_port
-        should(mc.cameras[2].signature).equal(undefined);
-        should(mc.cameras[2].videodevice).equal('/dev/video9');
-        should(mc.cameras[2].stream_port).equal(null);
+        // unbound cameras are deleted
+        should(mc.cameras[2].camera_name).not.equal('mycam3');
 
         // remaining devices are bound to new cameras
-        should(mc.cameras[3].signature).equal('greencamera');
-        should(mc.cameras[3].videodevice).equal('/dev/video2');
+        should(mc.cameras[2].signature).equal('greencamera');
+        should(mc.cameras[2].videodevice).equal('/dev/video2');
 
-        mc.cameras.length.should.equal(4);
+        mc.cameras.length.should.equal(3);
 
         // cameras are indexed from 1
-        should(mc.cameras[0].camera_id).equal(1);
-        should(mc.cameras[1].camera_id).equal(2);
-        should(mc.cameras[2].camera_id).equal(3);
-        should(mc.cameras[3].camera_id).equal(4);
+        should.deepEqual(mc.cameras.map(c=>c.camera_id), [1,2,3]);
 
         // bindDevices does not change existing camera order
-        should(mc.cameras[0].camera_name).equal('mycam1');
-        should(mc.cameras[1].camera_name).equal('mycam2');
-        should(mc.cameras[2].camera_name).equal('mycam3');
-        should(mc.cameras[3].camera_name).equal('CAM4'); // auto-generated
+        should.deepEqual(mc.cameras.map(c=>c.camera_name), ['mycam1', 'mycam2', 'CAM3']);
 
         // available cameras are assigned stream ports according to camera_id
         for (var i = 0; i < mc.cameras.length; i++) {
             var camera = mc.cameras[i];
-            if (i === 2) { // unavailable camera
-                should(camera.stream_port).equal(null);
-            } else { // available camera
-                should(camera.stream_port).equal(webcontrol_port + camera.camera_id);
-            }
+            should(camera.stream_port).equal(webcontrol_port + camera.camera_id);
         }
 
         // if devices don't change, re-binding is harmless
         const oldCameras = JSON.parse(JSON.stringify(mc.cameras));
         mc.bindDevices(devices);
         should.deepEqual(mc.cameras, oldCameras);
+        should.deepEqual(mc.cameras.map(c=>c.camera_name), ['mycam1', 'mycam2', 'CAM3']);
 
         // if a new device is added, existing bindings don't change
         const newDevices = JSON.parse(JSON.stringify(devices));
@@ -499,22 +489,60 @@
             framesizes: ['640x480'],
         };
         mc.bindDevices(newDevices);
+        should.deepEqual(mc.cameras.map(c=>c.camera_name), ['mycam1', 'mycam2', 'CAM3', 'CAM4']);
+        should.deepEqual(mc.cameras.map(c=>c.videodevice), 
+            ['/dev/video1', '/dev/video0', '/dev/video2', '/dev/video3']);
         for (var i=0; i<oldCameras.length; i++) {
             should.deepEqual(mc.cameras[i], oldCameras[i]);
         };
+        should.deepEqual(mc.cameras.slice(0,oldCameras.length), oldCameras);
 
-        // if a device becomes inactive, only camera bound to the device is affected
-        const delDevices = JSON.parse(JSON.stringify(devices));
+        // if a device becomes inactive, it's camera is deleted
+        const delDevices = JSON.parse(JSON.stringify(newDevices));
         delete delDevices['/dev/video0'];
         mc.bindDevices(delDevices);
-        for (var i=0; i<oldCameras.length; i++) {
-            if (mc.cameras[i].signature === 'redcamera') {
-                should.deepEqual(mc.cameras[i], Object.assign({}, oldCameras[i], {
-                    stream_port: null, // set to null because of inactive device
-                }));
-            } else {
-                should.deepEqual(mc.cameras[i], oldCameras[i]);
-            }
+        should.deepEqual(mc.cameras.map(c=>c.camera_name), 
+            [ 'mycam1', 'CAM3', 'CAM4', ]);
+        should.deepEqual(mc.cameras.map(c=>c.videodevice), 
+            ['/dev/video1', '/dev/video2', '/dev/video3']);
+    });
+    it("bindDevices() binds with different framesizes", function() {
+        const webcontrol_port = 9100;
+        const mc = new MotionConf({
+            motion: { webcontrol_port },
+            cameras: [{
+                videodevice: '/dev/video0',
+                camera_name: 'mycam1',
+            }],
+        });
+        mc.motion.webcontrol_port.should.equal(webcontrol_port);
+        mc.cameras.length.should.equal(1);
+        var devices = {
+            '/dev/video0': {
+                filepath: '/dev/video0',
+                framesizes: ['640x480'],
+            },
         };
+        mc.bindDevices(devices);
+        mc.cameras.length.should.equal(1);
+        should(mc.cameras[0].framesize).equal('640x480');
+
+        var devices = {
+            '/dev/video0': {
+                filepath: '/dev/video0',
+                framesizes: ['848x480'],
+            },
+        };
+        mc.bindDevices(devices);
+        should(mc.cameras[0].framesize).equal('848x480');
+
+        var devices = {
+            '/dev/video0': {
+                filepath: '/dev/video0',
+                framesizes: ['140x120'],
+            },
+        };
+        mc.bindDevices(devices);
+        should(mc.cameras[0].framesize).equal('140x120');
     });
 })
