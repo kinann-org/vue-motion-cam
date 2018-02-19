@@ -113,6 +113,9 @@
         bindExpress(rootApp, restHandlers = this.handlers) {
             super.bindExpress(rootApp, restHandlers);
             this.app.use("/motion", express.static(motionDir));
+            var vmcdir = path.join(__dirname, "ui");
+            winston.info(`/vue-motion-cam/ui => ${vmcdir}`);
+            rootApp.use("/vue-motion-cam/ui", express.static(vmcdir));
             return this;
         }
 

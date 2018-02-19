@@ -226,7 +226,7 @@ export default {
             window.open(this.cameraUrl(camera), "_blank");
         },
         timelapse(camera, days) {
-            var newurl = [this.restOrigin(),this.service, "ui", "timelapse.html"].join("/");
+            var newurl = [this.restOrigin(),"vue-motion-cam", "ui", "timelapse.html"].join("/");
             var url = [this.restOrigin(), this.service, "timelapse"].join("/");
             var mp4win = window.open(newurl,"_blank");
             var today = new Date();
