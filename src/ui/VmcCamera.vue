@@ -226,8 +226,9 @@ export default {
             window.open(this.cameraUrl(camera), "_blank");
         },
         timelapse(camera, days) {
+            var newurl = [this.restOrigin(),"timelapse.html"].join("/");
             var url = [this.restOrigin(), this.service, "timelapse"].join("/");
-            var mp4win = window.open("","_blank");
+            var mp4win = window.open(newurl,"_blank");
             var today = new Date();
             today.setHours(0);
             today.setMinutes(0);

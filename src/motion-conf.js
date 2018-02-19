@@ -244,9 +244,10 @@
                     try {
                         yield that.writeConf().then(r=>async.next(r)).catch(e=>async.throw(e));
                         var r = yield that._spawnMotion().then(r=>async.next(r)).catch(e=>async.throw(e));
+                        winston.info(`MotionConf.startCamera() ok`);
                         resolve(r);
                     } catch (err) {
-                        winston.error(`MotionConf.startCamera()`, err.stack);
+                        winston.error(`MotionConf.startCamera() error`, err.stack);
                         reject(err);
                     }
                 }();
@@ -270,7 +271,7 @@
                 var nExpected = this.cameras.reduce((a,c) => (c.stream_port ? a+1:a), 0);
                 winston.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
                 return nExpected === this.nStreams ? Spawner.LINE_RESOLVE : Spawner.LINE_INFO;
-            } else if (line.match(/Started motion-stream server in port/)) {
+            } else if (line.match(/Started motion-stream server .n port/)) {
                 this.status = this.STATUS_OPEN;
                 this.statusText = line;
                 this.nStreams++;
@@ -289,7 +290,8 @@
                 const pid = that.process.pid;
                 try {
                     process.kill(pid, 0);
-                    var err = new Error(`${that.name} camera is already open`);
+                    var err = new Error(`MotionConf._spawnMotion(${that.name}) ignored: camera is already open`);
+                    winston.warn(err.message);
                     return Promise.reject(err);
                 } catch (err) {
                     winston.info("No existing camera service: starting camera service...");
@@ -298,7 +300,7 @@
             }
             that.status = that.STATUS_UNKNOWN;
             that.nStreams = 0;
-            winston.info(`MotionConf._spawnMotion() ${cmd}`);
+            winston.info(`MotionConf._spawnMotion() spawning:${cmd}`);
             return that.spawner.spawn(cmd);
         }
 
@@ -307,14 +309,13 @@
                 return new Promise((resolve, reject) => {
                     try {
                         execSync('pkill -f "^motion -c"');
-                        resolve({
-                            status: "camera streaming is shutting down",
-                        });
+                        var status = "camera streaming is shutting down";
+                        winston.info(`MotionConf.startCamera() ${status}`);
+                        resolve({ status });
                     } catch (err) {
-                        winston.info(err.stack);
-                        resolve({
-                            status: "camera streaming is off",
-                        });
+                        var status = `Error stopping camera. ${err.message}`;
+                        winston.error(err.stack);
+                        resolve({ status });
                     }
                 });
             }

@@ -138,6 +138,7 @@
                 var mc = this.motionConf;
                 (start ? mc.startCamera() : mc.stopCamera()).then(process => {
                     this.streaming = start;
+                    winston.info(`VmcBundle.activateCamera(${start}) ok`);
                     resolve({ status });
                 }).catch(err => {
                     winston.error(err.stack);
