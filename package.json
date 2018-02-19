@@ -9,6 +9,7 @@
     "src": "src"
   },
   "dependencies": {
+    "aspell": "^0.1.0",
     "rest-bundle": "^0.30.0",
     "rimraf": "^2.6.1"
   },

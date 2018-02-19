@@ -1,5 +1,6 @@
 (function(exports) {
     const express = require('express');
+    const EventEmitter = require('events');
     const winston = require('winston');
     const srcPkg = require("../package.json");
     const path = require("path");
@@ -33,7 +34,10 @@
             this.options = Object.assign({}, options);
             this.devices = [];
             this.streaming = false;
+            this.emitter = new EventEmitter();
         }
+
+        static get EVT_CAMERA_ACTIVATE() {return "event_camera_activate"; }
 
         updateMotion(conf) {
             var that = this;
@@ -125,19 +129,31 @@
             return this.putApiModel(req, res, next, this.apiFile);
         }
 
-        postCameraStart(req, res, next) {
+        activateCamera(start) {
+            var status = `camera streaming is ${start?'on':'off'}`;
+            if (start === this.streaming) {
+                return Promise.resolve({ status });
+            }
             return new Promise((resolve, reject) => {
-                this.motionConf.startCamera().then(process => {
-                    this.streaming = true;
-                    resolve({
-                        status: `camera streaming is on`,
-                    });
+                var mc = this.motionConf;
+                (start ? mc.startCamera() : mc.stopCamera()).then(process => {
+                    this.streaming = start;
+                    resolve({ status });
                 }).catch(err => {
                     winston.error(err.stack);
                     reject(err);
                 });
             });
         }
+
+        postCameraStart(req, res, next) {
+            return this.activateCamera(true);
+        }
+
+        postCameraStop(req, res, next) {
+            return this.activateCamera(false);
+        }
+
 
         postTimelapse(req, res, next) {
             return new Promise((resolve, reject) => {
@@ -171,21 +187,6 @@
                     winston.error("VmcBundle.postTimelapse()", e.stack);
                     reject(e);
                 }
-            });
-        }
-
-        postCameraStop(req, res, next) {
-            return new Promise((resolve, reject) => {
-                this.motionConf.stopCamera()
-                .then(response => {
-                    this.streaming = false;
-                    resolve({
-                        status: `camera streaming is off`,
-                    });
-                }).catch(err => {
-                    winston.error(err.stack);
-                    reject(err);
-                });
             });
         }
 

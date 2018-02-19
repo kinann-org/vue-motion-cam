@@ -13,9 +13,8 @@
             <div class="vmc-commands" xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
                 <v-btn light flat icon @click="toggleCamera()" >
                     <v-icon v-show="streaming === false" >videocam</v-icon>
-                    <v-icon v-show="streaming === true" 
-                        style="border: 1pt solid red; border-radius: 7px;"
-                        >videocam_off</v-icon>
+                    <v-icon v-show="streaming === true" style="border: 1pt solid red; border-radius: 7px;"
+                        >videocam</v-icon>
                     <v-icon v-show="streaming == null" >hourglass_full</v-icon>
                 </v-btn>
                 <v-btn light flat icon @click="zoomCamera()" >
@@ -24,12 +23,21 @@
             </div>
             <div v-for="(camera,icam) in cameras" :key="icam" class='vmc-feed ' >
                 <div class="vmc-feed-actions">
-                    <div xs-2 offset-xs2 class="pl-1 pt-2 pb-0">{{camera.camera_name}}</div>
+                    <div xs-2 offset-xs2 class="pl-1 pt-2 pb-0">
+                        <span v-show="streaming" style="color: #00ee00">&#x25cf;</span>
+                        <span v-show="!streaming" >&#x25cf;</span>
+                        {{camera.camera_name}}
+                    </div>
                     <v-menu offset-y>
                       <v-btn small slot=activator icon><v-icon>menu</v-icon></v-btn>
                       <v-list>
                         <v-list-tile @click="editCamera(camera)">
-                          <v-list-tile-title>Edit camera settings</v-list-tile-title>
+                          <v-list-tile-title>Edit all camera settings</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile @click="openCameraPage(camera)"
+                            :disabled="!streaming"
+                            >
+                          <v-list-tile-title>Open webcam page</v-list-tile-title>
                         </v-list-tile>
                         <v-list-tile @click="timelapse(camera,7)">
                           <v-list-tile-title>Timelapse (week)</v-list-tile-title>
@@ -43,7 +51,7 @@
                 <div @click='clickCamera(camera)' 
                     :style='`height:${imgHeight};width:${imgWidth}`'
                 >
-                    <img v-if='streaming && camera.stream_port' :src="camera.url" 
+                    <img v-if='streaming && camera.stream_port' :src="cameraUrl(camera)" 
                         :style='`height:${imgHeight};width:${imgWidth}`'
                         />
                     <div v-if='!streaming || camera.stream_port==null'
@@ -54,12 +62,13 @@
                             ><v-icon>visibility_off</v-icon></div>
                         <div v-if='camera.stream_port == null'
                             >No device</div>
+                        <div style="font-size: xx-small; text-align: center" >{{cameraUrl(camera)}}hi</div>
                     </div>
 
                 </div>
             </div>
                 <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash ">
-                    <div slot="title">Camera Settings </div>
+                    <div slot="title">All Camera Settings </div>
                     <rb-dialog-row label="Motion API">
                         <v-text-field v-model='apiModelCopy.version' 
                             label="Version" disabled class="input-group" />
@@ -180,10 +189,6 @@ export default {
             console.log("clickCamera", camera.camera_name);
         },
         refreshCameras() {
-            var rnd = Math.random();
-            this.cameras.forEach(camera => {
-                Vue.set(camera, 'url', `http://${location.hostname}:${camera.stream_port}/?r=${rnd}`);
-            });
         },
         toggleCamera() {
             var newStream = this.streaming ? false : true;
@@ -195,30 +200,30 @@ export default {
             }
             promise.then(r => (this.rbService.streaming = newStream));
         },
+        cameraUrl(camera) {
+            var rnd = Math.random();
+            return `http://${location.hostname}:${camera.stream_port}/?r=${rnd}`;
+        },
         startCamera() {
             var url = [this.restOrigin(),this.service,"camera", "start"].join("/");
-            Vue.set(this.rbResource, 'httpErr', null);
             return this.$http.post(url, "nodata").then(r => {
                 console.log(`HTTP${r.status}`, JSON.stringify(r.data));
-                this.refreshCameras();
                 return r;
             }).catch(err => {
-                Vue.set(this.rbResource, 'httpErr', err);
+                this.alertError(`Error starting cameras: ${err.message}`);
             });
         },
         stopCamera() {
-            this.cameras.forEach(camera => {
-                Vue.set(camera, 'url', null);
-            });
             var url = [this.restOrigin(),this.service,"camera", "stop"].join("/");
-            Vue.set(this.rbResource, 'httpErr', null);
             return this.$http.post(url, "nodata").then(r => {
                 console.log(`HTTP${r.status}`, JSON.stringify(r.data));
                 return r;
             }).catch(err => {
-                Vue.set(this.rbResource, 'httpErr', err);
                 this.alertError(`Error stopping cameras: ${err.message}`);
             });
+        },
+        openCameraPage(camera) {
+            window.open(this.cameraUrl(camera), "_blank");
         },
         timelapse(camera, days) {
             var url = [this.restOrigin(), this.service, "timelapse"].join("/");
@@ -312,9 +317,6 @@ export default {
         streaming() {
             return this.rbService.streaming;
         },
-        httpErr() {
-            return this.rbResource.httpErr;
-        },
         started() {
             return this.rbResource && this.rbResource.apiModel && this.rbResource.started;
         },
@@ -332,7 +334,7 @@ export default {
         this.$http.get([this.restOrigin(),this.service,"devices"].join("/"));
         this.restBundleResource();
         this.rbDispatch("apiLoad").then(r => {
-            this.refreshCameras();
+            // tbd
         });
     },
     mounted() {
@@ -373,6 +375,7 @@ export default {
 .vmc-img-placeholder {
     display: flex;
     background-color: lightgrey;
+    flex-flow: column;
     align-items: center;
     justify-content: center;
 }

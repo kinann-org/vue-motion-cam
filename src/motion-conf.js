@@ -202,6 +202,15 @@
                             yield fs.writeFile(campath, cameras[i],
                                 (err) => err ? async.throw(err) : async.next(true));
                         };
+                        if (that.process && that.status === that.STATUS_OPEN) {
+                            const pid = that.process.pid;
+                            try {
+                                process.kill(pid, 'SIGHUP');
+                                winston.warn("Existing camera configuration updated");
+                            } catch (err) {
+                                winston.warn("Updated configuration will be applied when camera is started");
+                            }
+                        }
                         resolve(true);
                     } catch (err) {
                         reject(err);
