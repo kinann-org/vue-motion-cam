@@ -13,8 +13,8 @@
             <div class="vmc-commands" xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
                 <v-btn light flat icon @click="toggleCamera()" >
                     <v-icon v-show="streaming === false" >videocam</v-icon>
-                    <v-icon v-show="streaming === true" style="border: 1pt solid red; border-radius: 7px;"
-                        >videocam</v-icon>
+                    <v-icon v-show="streaming === true" xstyle="border: 1pt solid red; border-radius: 7px;"
+                        >videocam_off</v-icon>
                     <v-icon v-show="streaming == null" >hourglass_full</v-icon>
                 </v-btn>
                 <v-btn light flat icon @click="zoomCamera()" >
