@@ -167,13 +167,12 @@
         this.timeout(5000);
         var async = function* () {
             try {
+                winston.level='info';
                 var emitter = new EventEmitter();
                 var vmc = new VmcBundle("test", {
                     emitter,
                 });
                 should(vmc.streaming).equal(false);
-                yield emitter.on(VmcBundle.EVT_VMC_INITIALIZED, ()=> async.next(true));
-                winston.info(`sending camera activation event`);
                 emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, true);
                 yield emitter.on(VmcBundle.EVT_CAMERA_ACTIVATED, (active)=> async.next(active));
                 should(vmc.streaming).equal(true);
