@@ -1,6 +1,7 @@
 (typeof describe === 'function') && describe("VmcBundle", function() {
     const should = require("should");
     const VmcBundle = require("../index").VmcBundle;
+    const EventEmitter = require('events');
     const MotionConf = require("../index").MotionConf;
     const supertest = require('supertest');
     const winston = require('winston');
@@ -154,6 +155,30 @@
                     res.body.should.match(/camera streaming is off/);
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
 
+                done();
+            } catch(err) {
+                winston.error(err.message, err.stack);
+                done(err);
+            }
+        }();
+        async.next();
+    });
+    it("EVT_CAMERA_ACTIVATE activates camera", function(done) {
+        this.timeout(5000);
+        var async = function* () {
+            try {
+                var emitter = new EventEmitter();
+                var vmc = new VmcBundle("test", {
+                    emitter,
+                });
+                should(vmc.streaming).equal(false);
+                yield emitter.on(VmcBundle.EVT_VMC_INITIALIZED, ()=> async.next(true));
+                winston.info(`sending camera activation event`);
+                emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, true);
+                yield emitter.on(VmcBundle.EVT_CAMERA_ACTIVATED, (active)=> async.next(active));
+                should(vmc.streaming).equal(true);
+                yield emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, false);
+                should(vmc.streaming).equal(false);
                 done();
             } catch(err) {
                 winston.error(err.message, err.stack);

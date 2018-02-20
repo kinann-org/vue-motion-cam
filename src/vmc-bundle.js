@@ -28,16 +28,31 @@
                 ]),
             });
             this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
+            this.emitter = options.emitter || new EventEmitter();
             this.updateMotion({
                 name: this.name,
+            }).then(r => {
+                winston.info(`VmcBundle.EVT_VMC_INITIALIZED`);
+                this.emitter.on(VmcBundle.EVT_CAMERA_ACTIVATE, value => {
+                    that.activateCamera(!!value).then(r => {
+                        winston.info(`EVT_CAMERA_ACTIVATE ${value} ok`);
+                    }).catch(e => {
+                        winston.error(`EVT_CAMERA_ACTIVATE ${value}`, e.stack);
+                    });
+                });
+                this.emitter.emit(VmcBundle.EVT_VMC_INITIALIZED);
+            }).catch(e => {
+                winston.error(`VmcBundle initialization failed`, e.stack);
             });
             this.options = Object.assign({}, options);
             this.devices = [];
             this.streaming = false;
-            this.emitter = new EventEmitter();
+            var that = this;
         }
 
-        static get EVT_CAMERA_ACTIVATE() {return "event_camera_activate"; }
+        static get EVT_CAMERA_ACTIVATE() {return "camera_activate"; }
+        static get EVT_CAMERA_ACTIVATED() {return "camera_activated"; }
+        static get EVT_VMC_INITIALIZED() {return "vmc_initialized"; }
 
         updateMotion(conf) {
             var that = this;
@@ -135,16 +150,21 @@
         activateCamera(start) {
             var status = `camera streaming is ${start?'on':'off'}`;
             if (start === this.streaming) {
+                winston.info(`VmcBundle.activateCamera(${this.streaming}->${start}) ignored`);
+                this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, start);
                 return Promise.resolve({ status });
             }
+            winston.debug(`VmcBundle.activateCamera(${this.streaming}->${start})`);
+            var that = this;
             return new Promise((resolve, reject) => {
-                var mc = this.motionConf;
+                var mc = that.motionConf;
                 (start ? mc.startCamera() : mc.stopCamera()).then(process => {
-                    this.streaming = start;
-                    winston.info(`VmcBundle.activateCamera(${start}) ok`);
+                    winston.info(`VmcBundle.activateCamera(${this.streaming}->${start}) ok`);
+                    that.streaming = start;
+                    this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, start);
                     resolve({ status });
                 }).catch(err => {
-                    winston.error(err.stack);
+                    winston.error(`VmcBundle.activateCamera(${this.streaming}->${start}) error`, e.stack);
                     reject(err);
                 });
             });
