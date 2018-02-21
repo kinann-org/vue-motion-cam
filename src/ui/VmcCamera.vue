@@ -62,7 +62,7 @@
                             ><v-icon>visibility_off</v-icon></div>
                         <div v-if='camera.stream_port == null'
                             >No device</div>
-                        <div style="font-size: xx-small; text-align: center" >{{cameraUrl(camera)}}hi</div>
+                        <div style="font-size: xx-small; text-align: center" >{{cameraUrl(camera)}}</div>
                     </div>
 
                 </div>
