@@ -143,50 +143,53 @@
         }
 
         onActivateCamera(value) {
-            if (this.motionConf) {
-                this._activateCamera(!!value).then(r => {
-                    winston.info(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ok`);
-                }).catch(e => {
-                    winston.error(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => error`, e.stack);
-                });
-            } else {
-                winston.info(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => pending initialization...`);
-                this.emitter.on(VmcBundle.EVT_VMC_INITIALIZED, () => {
-                    this.onActivateCamera(value);
-                });
-            }
+            this.activateCamera(!!value).then(r => {
+                winston.info(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ok`);
+            }).catch(e => {
+                winston.error(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => error`, e.stack);
+            });
         }
 
-        _activateCamera(start) {
-            var status = `camera streaming is ${start?'on':'off'}`;
+        activateCamera(start) {
+            var status = {
+                camera_streaming: start,
+            };
             if (start === this.streaming) {
-                winston.info(`VmcBundle._activateCamera(${this.streaming}->${start}) ignored`);
+                winston.info(`VmcBundle.activateCamera(${this.streaming}->${start}) ignored`);
                 this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, start);
-                return Promise.resolve({ status });
+                return Promise.resolve(status);
             }
-            winston.debug(`VmcBundle._activateCamera(${this.streaming}->${start})`);
+            if (this.motionConf == null) {
+                return new Promise((resolve, reject) => {
+                    winston.info(`VmcBundle.activateCamera(${start}) pending initialization...`);
+                    this.emitter.on(VmcBundle.EVT_VMC_INITIALIZED, () => {
+                        this.activateCamera(start).then(r => resolve(r)).catch(e=>reject(e));
+                    });
+                });
+            }
+            winston.debug(`VmcBundle.activateCamera(${this.streaming}->${start})`);
             var that = this;
             return new Promise((resolve, reject) => {
                 var mc = that.motionConf;
-                winston.info(`VmcBundle._activateCamera(${this.streaming}->${start}) ...`);
+                winston.info(`VmcBundle.activateCamera(${this.streaming}->${start}) ...`);
                 (start ? mc.startCamera() : mc.stopCamera()).then(process => {
-                    winston.info(`VmcBundle._activateCamera(${this.streaming}->${start}) ok`);
+                    winston.info(`VmcBundle.activateCamera(${this.streaming}->${start}) ok`);
                     that.streaming = start;
                     this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, start);
-                    resolve({ status });
+                    resolve(status);
                 }).catch(e => {
-                    winston.error(`VmcBundle._activateCamera(${this.streaming}->${start}) error`, e.stack);
+                    winston.error(`VmcBundle.activateCamera(${this.streaming}->${start}) error`, e.stack);
                     reject(e);
                 });
             });
         }
 
         postCameraStart(req, res, next) {
-            return this._activateCamera(true);
+            return this.activateCamera(true);
         }
 
         postCameraStop(req, res, next) {
-            return this._activateCamera(false);
+            return this.activateCamera(false);
         }
 
 

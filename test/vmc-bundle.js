@@ -152,7 +152,7 @@
                 // stop works even if streaming is inactive
                 var response = yield supertest(app).post("/test/camera/stop").send("").expect((res) => {
                     res.statusCode.should.equal(200);
-                    res.body.should.match(/camera streaming is off/);
+                    should.deepEqual(res.body, { camera_streaming: false, });
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
 
                 done();
@@ -167,7 +167,6 @@
         this.timeout(5000);
         var async = function* () {
             try {
-                winston.level='info';
                 var emitter = new EventEmitter();
                 var vmc = new VmcBundle("test", {
                     emitter,
@@ -177,6 +176,30 @@
                 yield emitter.on(VmcBundle.EVT_CAMERA_ACTIVATED, (active)=> async.next(active));
                 should(vmc.streaming).equal(true);
                 yield emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, false);
+                should(vmc.streaming).equal(false);
+                done();
+            } catch(err) {
+                winston.error(err.message, err.stack);
+                done(err);
+            }
+        }();
+        async.next();
+    });
+    it("TESTTESTactivateCamera(start) returns promise resolved on activation", function(done) {
+        this.timeout(5000);
+        var async = function* () {
+            try {
+                var vmc = new VmcBundle("test");
+                should(vmc.streaming).equal(false);
+                var r = yield vmc.activateCamera(true).then(r=>async.next(r)).catch(e=>async.throw(e));
+                should.deepEqual(r, {
+                    camera_streaming: true,
+                });
+                should(vmc.streaming).equal(true);
+                var r = yield vmc.activateCamera(false).then(r=>async.next(r)).catch(e=>async.throw(e));
+                should.deepEqual(r, {
+                    camera_streaming: false,
+                });
                 should(vmc.streaming).equal(false);
                 done();
             } catch(err) {
@@ -205,14 +228,14 @@
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera streaming is on/);
+                should.deepEqual(res.body, { camera_streaming: true, });
 
                 // stop camera
                 var res = yield supertest(app).post("/test/camera/stop").timeout(httpTimeout).send("")
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera streaming is off/);
+                should.deepEqual(res.body, { camera_streaming: false, });
 
                 // TODO: Eliminate need for this timeout
                 yield setTimeout(() => async.next(), 500);
@@ -222,14 +245,14 @@
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera streaming is on/);
+                should.deepEqual(res.body, { camera_streaming: true, });
 
                 // stop camera
                 var res = yield supertest(app).post("/test/camera/stop").timeout(httpTimeout).send("")
                     .end((e,r) => e ? async.throw(e) : async.next(r));
                 should.ok(res);
                 res.statusCode.should.equal(200);
-                res.body.should.match(/camera streaming is off/);
+                should.deepEqual(res.body, { camera_streaming: false, });
 
                 done();
             } catch(err) {
