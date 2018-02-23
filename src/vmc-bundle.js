@@ -27,14 +27,14 @@
                     this.resourceMethod("post", "timelapse", this.postTimelapse),
                 ]),
             });
-            this.apiFile = `${srcPkg.name}.${this.name}.motion-conf`;
             this.emitter = options.emitter || new EventEmitter();
             this.emitter.on(VmcBundle.EVT_CAMERA_ACTIVATE, value => {
                 this.onActivateCamera(value);
             });
-            this.updateMotion({
-                name: this.name,
-            }).then(r => {
+            this.motionConf = new MotionConf(Object.assign(options, {
+                name,
+            }));
+            this.loadApiModel().then(r => {
                 winston.info(`VmcBundle.EVT_VMC_INITIALIZED`);
                 this.emitter.emit(VmcBundle.EVT_VMC_INITIALIZED);
             }).catch(e => {
@@ -49,24 +49,18 @@
         static get EVT_CAMERA_ACTIVATED() {return "camera_activated"; }
         static get EVT_VMC_INITIALIZED() {return "vmc_initialized"; }
 
-        updateMotion(conf) {
+        scanSystem(conf) {
             var that = this;
             return new Promise((resolve, reject) => {
                 var async = function*() {
                     try {
                         var version = yield MotionConf.installedVersion()
                             .then(r=>async.next(r)).catch(e=>async.throw(e));
-                        var defaultConf = {
-                            name: that.name,
-                            version,
-                        };
                         if (conf) {
-                            conf = Object.assign({}, defaultConf, conf, {
-                                version,
-                            });
+                            conf = Object.assign({}, that.motionConf, conf);
                             that.motionConf = new MotionConf(conf);
                         }
-                        that.motionConf = that.motionConf || new MotionConf(defaultConf);
+                        that.motionConf.version = version;
                         new V4L2Ctl().listDevices().then(devices => {
                             that.devices = devices;
                             that.motionConf.bindDevices(devices);
@@ -81,36 +75,20 @@
             });
         }
 
-        loadApiModel(filePath) {
+        loadApiModel(name) {
             return new Promise((resolve, reject) => {
-                super.loadApiModel(filePath)
-                    .then(model => {
-                        try {
-                            if (model) {
-                                this.updateMotion(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
-                            } else if (filePath === this.apiFile) {
-                                this.updateMotion().then(r=>resolve(r.toJSON())).catch(e=>reject(e));
-                            } else {
-                                throw new Error("unknown api model:" + filePath);
-                            }
-                        } catch (err) { // implementation error
-                            winston.error(err.message, err.stack);
-                            reject(err);
-                        }
-                    })
-                    .catch(err => reject(err));
+                super.loadApiModel(name).then(model => {
+                    this.scanSystem(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                }).catch(err => reject(err));
             });
         }
 
-        saveApiModel(model, filePath) {
+        saveApiModel(model, name) {
             return new Promise((resolve, reject) => {
-                super.saveApiModel(model, filePath)
+                super.saveApiModel(model, name)
                     .then(res => {
                         try {
-                            if (filePath !== this.apiFile) {
-                                throw new Error(`filePath expected:${this.apiFile} actual:${filePath}`);
-                            }
-                            this.updateMotion(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
+                            this.scanSystem(model).then(r=>resolve(r.toJSON())).catch(e=>reject(e));
                         } catch (err) { // implementation error
                             winston.error(err.message, err.stack);
                             reject(err);
@@ -135,11 +113,11 @@
         }
 
         getMotionConf(req, res, next) {
-            return this.getApiModel(req, res, next, this.apiFile);
+            return this.getApiModel(req, res, next, this.name);
         }
 
         putMotionConf(req, res, next) {
-            return this.putApiModel(req, res, next, this.apiFile);
+            return this.putApiModel(req, res, next, this.name);
         }
 
         onActivateCamera(value) {
@@ -235,7 +213,6 @@
                 devices: this.devices,
             };
         }
-
 
     } //// class VmcBundle
 

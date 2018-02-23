@@ -73,7 +73,7 @@
                 result.should.equal(ss.process);
 
                 // reject on red
-                winston.error("Following error is expected");
+                winston.error("Expected error (BEGIN)");
                 var result = yield ss.spawn([
                     'printf', 
                     [   
@@ -85,6 +85,7 @@
                 ])
                 .then(r=>async.throw(new Error("resolve() not expected")))
                 .catch(e=>async.next(e));
+                winston.error("Expected error (END)");
                 result.should.instanceOf(Error);
                 result.message.should.equal('red');
 

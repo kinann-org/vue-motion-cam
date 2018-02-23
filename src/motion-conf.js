@@ -28,7 +28,6 @@
             this.usage = options.usage || 'stream';
             this.status = null; //indeterminate
             this.name = options.name || "test";
-            this.confName = options.confName || `motion-${this.name}.conf`;
             this.confDir = options.confDir || motionDir;
             this.version = options.version || "3.2.12";
             winston.info(`MotionConf ${this.version}`);
@@ -67,6 +66,10 @@
                 logName: this.motion.logfile,
                 stdOutFilter: function(line) { return that._lineFilter(line) },
             });
+        }
+
+        get confName() {
+            return `motion-${this.name}.conf`;
         }
 
         static installedVersion() {

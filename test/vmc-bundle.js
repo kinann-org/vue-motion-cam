@@ -1,16 +1,16 @@
 (typeof describe === 'function') && describe("VmcBundle", function() {
     const should = require("should");
+    const winston = require('winston');
     const VmcBundle = require("../index").VmcBundle;
     const EventEmitter = require('events');
     const MotionConf = require("../index").MotionConf;
     const supertest = require('supertest');
-    const winston = require('winston');
-    winston.level = "warn";
+    const path = require('path');
     const srcPkg = require("../package.json");
     const rb = require('rest-bundle');
     const rbh = new rb.RbHash();
     const fs = require('fs');
-    const APIMODEL_PATH = `api-model/${srcPkg.name}.test.motion-conf.json`;
+    const APIMODEL_PATH = `api-model/${srcPkg.name}.test.json`;
     const DEFAULT_CONF = new MotionConf().toJSON();
     const DEFAULT_APIMODEL = Object.assign({}, DEFAULT_CONF, { name: 'CAM1' });
     const app = require("../scripts/server.js");
@@ -56,7 +56,7 @@
         }();
         async.next();
     });
-    it("GET /motion-conf returns MotionConf apiModel", function(done) {
+    it("TESTTESTGET /motion-conf returns MotionConf apiModel", function(done) {
         var async = function* () {
             try {
                 var app = testInit();
@@ -100,8 +100,9 @@
                         test: "bad-data",
                     }
                 }
-                winston.warn("Following error is expected");
+                winston.warn("Expected error (BEGIN)");
                 var response = yield supertest(app).put("/test/motion-conf").send(badData).expect((res) => {
+                    winston.warn("Expected error (END)");
                     res.statusCode.should.equal(400); // BAD REQUEST (no rbHash)
                 }).end((e,r) => e ? async.throw(e) : async.next(r));
                 var curConf = response.body.data.apiModel;
@@ -185,7 +186,7 @@
         }();
         async.next();
     });
-    it("TESTTESTactivateCamera(start) returns promise resolved on activation", function(done) {
+    it("activateCamera(start) returns promise resolved on activation", function(done) {
         this.timeout(5000);
         var async = function* () {
             try {
@@ -292,6 +293,41 @@
             } catch(err) {
                 winston.error(err.message, err.stack);
                 throw(err);
+            }
+        }();
+        async.next();
+    });
+    it("TESTTESTEVT_VMC_INITIALIZED should be sent after deserialization", function(done) {
+        var async = function*() {
+            try {
+                var name = "testVmcInit";
+                var mc = new MotionConf({
+                    motion: {
+                        stream_localhost: 'off',
+                    },
+                });
+                class TestVMC extends VmcBundle {
+                    constructor(name, opts={}) {
+                        super(name, opts);
+                    }
+                }
+                var filename = `${srcPkg.name}.${name}.json`;
+                var apiFile = path.join(__dirname, '..', 'api-model', filename);
+                var json = mc.toJSON();
+                fs.writeFileSync(apiFile, JSON.stringify(json,null,2));
+                var scope = {};
+                var emitter = new EventEmitter();
+                emitter.on(VmcBundle.EVT_VMC_INITIALIZED, () => {
+                    try {
+                        should(scope.vmc.motionConf.motion.stream_localhost).equal('off');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
+                scope.vmc = new TestVMC(`${name}`, { emitter, });
+            } catch (e) {
+                done(e);
             }
         }();
         async.next();

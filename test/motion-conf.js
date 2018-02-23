@@ -8,11 +8,10 @@
     const MotionConf = exports.MotionConf || require("../index").MotionConf;
     const appDir = process.cwd();
     const confDir = path.join(appDir, ".motion");
-    const confName = "motion-test.conf";
+    const CONF_NAME = "motion-test.conf";
     const DEFAULT_VERSION = "3.2.12";
     const confOpts = {
         confDir,
-        confName,
     };
     const defaultMotion = {
         ffmpeg_output_movies: "on",
@@ -333,7 +332,7 @@
             try {
                 var mc = new MotionConf(confOpts);
                 should(mc.version).equal(DEFAULT_VERSION);
-                var motion = path.join(confDir, confName);
+                var motion = path.join(confDir, CONF_NAME);
                 var camera1 = path.join(confDir, "camera1.conf");
                 if (fs.existsSync(camera1)) {
                     yield fs.unlink(camera1, 
@@ -357,7 +356,7 @@
     });
     it("shellCommands() returns motion shell commands", function() {
         var mc = new MotionConf(confOpts);
-        var confPath = path.join(confDir, confName);
+        var confPath = path.join(confDir, CONF_NAME);
         should.deepEqual(mc.shellCommands(), {
             startCamera: ['motion', '-c', `${confPath}`],
         });
