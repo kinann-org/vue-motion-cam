@@ -152,15 +152,16 @@ export default {
                 var wh = fs.split("x");
                 var width = wh[0];
                 var height = wh[1];
-                //if (width % 16 || height % 16) {
-                    //return a;
-                //}
-                a.push(fs);
+                var mp = (width*height/1000000).toFixed(1);
+                a.push({
+                    text: `${fs} (${mp}MP with aspect ratio:${(width/height).toFixed(1)})`,
+                    value: fs,
+                });
                 return a;
             }, []);
             sizes.sort((a,b) => {
-                var awh = a.split("x");
-                var bwh = b.split("x");
+                var awh = a.text.split("x");
+                var bwh = b.text.split("x");
                 var cmp = awh[0] - bwh[0];
                 return cmp ? cmp : awh[1] - bwh[1];
             });
@@ -244,6 +245,7 @@ export default {
             return this.$http.post(url, opts).then(r => {
                 mp4win.location = this.restOrigin()+r.data.movie_url;
             }).catch(err => {
+                mp4win.close();
                 this.alertError(`Timelapse error: ${err.message}`);
             });
         },

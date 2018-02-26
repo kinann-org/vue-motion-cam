@@ -179,11 +179,13 @@
                     var camera_name = opts.camera_name;
                     var start_date = opts.start_date;
                     var end_date = opts.end_date;
+                    var movie_duration = opts.movie_duration || 15;
                     var timelapse = new Timelapse({
                         motionConf: this.motionConf,
                         camera_name,
                         start_date,
                         end_date,
+                        movie_duration,
                     });
                     timelapse.createMovie().then(mp4FilePath => {
                         var result = {
