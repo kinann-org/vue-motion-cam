@@ -37,21 +37,15 @@
             this.options = Object.assign({}, options);
             this.devices = [];
             this.streaming = false;
-            this.initialized = false;
         }
 
         initialize() {
-            return new Promise((resolve, rejecgt) => {
-                this.loadApiModel().then(r => {
-                    this.initialized = true;
-                    winston.info(`VmcBundle.initialize(${this.name}) EVT_VMC_INITIALIZED`);
-                    this.emitter.emit(VmcBundle.EVT_VMC_INITIALIZED);
-                    resolve(r);
-                }).catch(e => {
-                    winston.error(`VmcBundle.initialize(${this.name}) initialization failed`, e.stack);
-                    reject (e);
-                });
+            var promise = super.initialize();
+            promise.then(r => {
+                winston.info(`VmcBundle.initialize(${this.name}) EVT_VMC_INITIALIZED`);
+                this.emitter.emit(VmcBundle.EVT_VMC_INITIALIZED);
             });
+            return promise;
         }
 
         static get EVT_CAMERA_ACTIVATE() {return "camera_activate"; }
