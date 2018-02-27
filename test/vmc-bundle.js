@@ -56,7 +56,7 @@
         }();
         async.next();
     });
-    it("TESTTESTGET /motion-conf returns MotionConf apiModel", function(done) {
+    it("GET /motion-conf returns MotionConf apiModel", function(done) {
         var async = function* () {
             try {
                 var app = testInit();
@@ -177,6 +177,7 @@
                 yield emitter.on(VmcBundle.EVT_CAMERA_ACTIVATED, (active)=> async.next(active));
                 should(vmc.streaming).equal(true);
                 yield emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, false);
+                yield setTimeout(() => async.next(), 100); // allow motion to stop
                 should(vmc.streaming).equal(false);
                 done();
             } catch(err) {
@@ -201,6 +202,7 @@
                 should.deepEqual(r, {
                     camera_streaming: false,
                 });
+                yield setTimeout(() => async.next(), 100); // allow motion to stop
                 should(vmc.streaming).equal(false);
                 done();
             } catch(err) {
@@ -297,7 +299,7 @@
         }();
         async.next();
     });
-    it("TESTTESTEVT_VMC_INITIALIZED should be sent after deserialization", function(done) {
+    it("TESTTESTinitialize() loads apiModel and sends EVT_VMC_INITIALIZED", function(done) {
         var async = function*() {
             try {
                 var name = "testVmcInit";
@@ -315,17 +317,14 @@
                 var apiFile = path.join(__dirname, '..', 'api-model', filename);
                 var json = mc.toJSON();
                 fs.writeFileSync(apiFile, JSON.stringify(json,null,2));
-                var scope = {};
+                var eventCount = 0;
                 var emitter = new EventEmitter();
-                emitter.on(VmcBundle.EVT_VMC_INITIALIZED, () => {
-                    try {
-                        should(scope.vmc.motionConf.motion.stream_localhost).equal('off');
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                });
-                scope.vmc = new TestVMC(`${name}`, { emitter, });
+                emitter.on(VmcBundle.EVT_VMC_INITIALIZED, () => eventCount++);
+                var vmc = new TestVMC(name, { emitter, });
+                var config = yield vmc.initialize().then(r=>async.next(r)).catch(e=>async.throw(e));
+                should.deepEqual(config, vmc.motionConf.toJSON()); // intialize() resolves to configuration
+                should(vmc.motionConf.motion.stream_localhost).equal('off');
+                done();
             } catch (e) {
                 done(e);
             }

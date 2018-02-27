@@ -26,12 +26,14 @@ let async = function*() {
     try {
         // define RestBundles
         var restBundles = app.locals.restBundles = [];
-        var services = ['test'].concat(argv.filter((a, i) => i>1 && a[0]!=='-' && a!=="test"));
-        for (var iService = 0; iService < services.length; iService++) {
-            var serviceName = services[iService];
-            var vmc = new VmcBundle(serviceName);
-            restBundles.push(vmc);
-        }
+        winston.info('argv:', argv);
+        var serviceName = argv.reduce((acc, arg, i) =>  {
+            return acc==null && i>1 && arg[0]!=='-' ? arg : acc;
+        }, null) || 'test';
+        winston.info(`server.js setting up ${serviceName}`);
+        var vmc = new VmcBundle(serviceName);
+        yield vmc.initialize().then(r=>async.next(r)).catch(e=>async.throw(e));
+        restBundles.push(vmc);
 
         // declare ports
         var isTesting = module.parent != null && false;
