@@ -4,6 +4,7 @@
 * **auto-device recognition** pairs active USB video devices with new/existing camera settings.
 * **vuex store** shares camera state and configuration.
 * **auto-generates motion configuration files** from JSON camera settings saved on hosting server.
+* **weekly/monthly timelapse movies** movies generated on demand from web page.
 
 ### Installation
 ```bash
@@ -19,7 +20,8 @@ npm install
 npm run dev
 ```
 
-http://localhost:4000/#/vmc-camera
+http://localhost:4000/
 
 <a href="https://raw.githubusercontent.com/kinann-org/vue-motion-cam/master/doc/img/vmc.png"><img
     src="https://raw.githubusercontent.com/kinann-org/vue-motion-cam/master/doc/img/vmc.png" height=200px></a>
+
