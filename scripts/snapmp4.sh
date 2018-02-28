@@ -37,6 +37,7 @@ done
 
 START=$1 #inclusive
 END=$2 #exclusive
+IMAGES=0
 
 for i in $( ls $DIR ); do
     if [[ "$START" && "$i" < "$START" ]]; then
@@ -45,10 +46,16 @@ for i in $( ls $DIR ); do
         if [ "$VERBOSE" = "1" ]; then sleep 0; fi # dummy
     else
         if [ "$VERBOSE" = "1" ]; then echo -e "image\t: $i"; fi
+        IMAGES=$((IMAGES+1))
         ln -s `realpath "$DIR/$i"` "$TMPDIR/$i"
         RC=$?; if [ "$RC" != "0" ]; then exit $RC; fi
     fi
 done
+
+if [ "$IMAGES" = "0" ]; then
+    >&2 echo "$0 no images found for timelapse start:$START end:$END"
+    exit 1
+fi
 
 if [ "$VERBOSE" = "1" ]; then echo -e "OUT\t: $OUT"; fi
 if [ "$VERBOSE" = "1" ]; then echo -e "DIR\t: $DIR"; fi

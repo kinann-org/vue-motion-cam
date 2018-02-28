@@ -30,6 +30,7 @@
             this.name = options.name || "test";
             this.confDir = options.confDir || motionDir;
             this.version = options.version || "3.2.12";
+            this.timelapse_duration = options.timelapse_duration || 15;
             winston.info(`MotionConf ${this.version}`);
             Object.defineProperty(this, "STATUS_UNKNOWN", { value: "unknown" });
             Object.defineProperty(this, "STATUS_OPEN", { value: "open" });
@@ -230,6 +231,7 @@
                 motion: this.motion,
                 cameras: this.cameras,
                 version: this.version,
+                timelapse_duration: this.timelapse_duration,
             }
         }
 

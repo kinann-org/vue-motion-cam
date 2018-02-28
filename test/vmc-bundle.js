@@ -1,9 +1,12 @@
 (typeof describe === 'function') && describe("VmcBundle", function() {
     const should = require("should");
     const winston = require('winston');
-    const VmcBundle = require("../index").VmcBundle;
     const EventEmitter = require('events');
-    const MotionConf = require("../index").MotionConf;
+    const {
+        VmcBundle,
+        Timelapse,
+        MotionConf,
+    } = require('../index');
     const supertest = require('supertest');
     const path = require('path');
     const srcPkg = require("../package.json");
@@ -299,7 +302,7 @@
         }();
         async.next();
     });
-    it("TESTTESTinitialize() loads apiModel and sends EVT_VMC_INITIALIZED", function(done) {
+    it("initialize() loads apiModel and sends EVT_VMC_INITIALIZED", function(done) {
         var async = function*() {
             try {
                 var name = "testVmcInit";
@@ -326,6 +329,50 @@
                 should(vmc.motionConf.motion.stream_localhost).equal('off');
                 done();
             } catch (e) {
+                done(e);
+            }
+        }();
+        async.next();
+    });
+    it("onDaily(date) performs daily tasks", function(done) {
+        var now = new Date();
+        var async = function*() { 
+            try {
+                var testDir = path.join(__dirname, 'onDaily');
+                var vmc = new VmcBundle("test_onDaily",{
+                    confDir: testDir,
+                    motion: {
+                        snapshot_interval: 1800,
+                    },
+                    cameras: [{
+                        camera_name: 'camera1',
+                        framesize: "800x600",
+                    }],
+                });
+                var date = new Date(2018,1,20);
+                var timelapsePath = path.join(testDir,'camera1','timelapse.mp4');
+                fs.existsSync(timelapsePath) && fs.unlinkSync(timelapsePath);
+                var r = yield vmc.onDaily(date).then(r=>async.next(r)).catch(e=>async.throw(e));
+                should(r.timelapses).instanceOf(Array);
+                should(r.timelapses.length).equal(1);
+                r.timelapses.forEach(tl => should(tl).instanceOf(Timelapse));
+                should(r.timelapses[0].image_dir).equal(path.join(testDir,"camera1"));
+                should(r.timelapses[0].snapshot_interval).equal(1800);
+                should(r.timelapses[0].movie_duration).equal(15);
+                should(r.timelapses[0].framerate).approximately(22.4,0.1);
+                should(r.timelapses[0].framesize).equal('800x600');
+                should(r.timelapses[0].camera_name).equal("camera1");
+                should(r.timelapses[0].start_date.getFullYear()).equal(2018);
+                should(r.timelapses[0].start_date.getMonth()).equal(1);
+                should(r.timelapses[0].start_date.getDate()).equal(13);
+                should(r.timelapses[0].end_date.getFullYear()).equal(2018);
+                should(r.timelapses[0].end_date.getMonth()).equal(1);
+                should(r.timelapses[0].end_date.getDate()).equal(19);
+                var stat = fs.statSync(timelapsePath);
+                should(stat.ctime).above(now);
+                should(stat.size).equal(50509);
+                done();
+            } catch(e) {
                 done(e);
             }
         }();

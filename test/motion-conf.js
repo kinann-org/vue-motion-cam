@@ -40,8 +40,10 @@
         });
         should.ok(mc.motion);
         should.deepEqual(mc.motion, defaultMotion);
+        should(mc.timelapse_duration).equal(15);
 
         var customMotion = Object.assign({}, defaultMotion, {
+            timelapse_duration: 20,
             motion: {
                 webcontrol_port: 9090,
             },

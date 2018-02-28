@@ -13,6 +13,23 @@
             Object.assign(this, Timelapse.options(opts));
         }
 
+        static priorDate(date=new Date()) {
+            var date = new Date(date.getTime()-24*3600*1000);
+            date.setHours(23);
+            date.setMinutes(59);
+            date.setSeconds(59,999);
+            return date;
+        }
+
+        static createWeekTimelapse(opts={}) {
+            var end_date = opts.end_date || Timelapse.priorDate();
+            var start_date = new Date(end_date.getTime()-7*24*3600*1000+1);
+            return new Timelapse(Object.assign({
+                end_date,
+                start_date,
+            }, opts));
+        }
+
         static options(opts={}) {
             const today = new Date();
             const MIN_FRAMERATE = 1;  // slower FPS looks frozen and broken
@@ -39,7 +56,7 @@
             } else {
                 var framerate_min = Number(opts.framerate_min) || MIN_FRAMERATE;
                 var framerate_max = Number(opts.framerate_max) || MAX_FRAMERATE;
-                var movie_duration = Number(opts.movie_duration) || 10;
+                var movie_duration = Number(opts.movie_duration) || mc.timelapse_duration || 10;
                 var framerate = nImages / movie_duration ;
                 if (framerate < framerate_min) {
                     framerate = framerate_min;
@@ -98,7 +115,9 @@
                             winston.error("Timelapse.createMovie()", error.stack);
                             reject(error);
                         } else {
-                            resolve(stdout.trim());
+                            var output = stdout.trim();
+                            winston.info(`Timelapse.createMovie() output:${output}`);
+                            resolve(output);
                         }
                     });
                 } catch (e) {

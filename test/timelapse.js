@@ -15,7 +15,7 @@
     today.setSeconds(0,0);
     var mcDefault = new MotionConf();
 
-    it("TESTTESToptions() returns default ctor options", function() {
+    it("options() returns default ctor options", function() {
         var camera_name = mcDefault.cameras[0].camera_name;
         should.deepEqual(Timelapse.options(), {
             snapshot_interval: mcDefault.motion.snapshot_interval,
@@ -23,13 +23,13 @@
             image_dir: path.join(motionDir, "CAM1"),
             start_date: today,
             end_date: new Date(today.getTime()+24*3600*1000),
-            framerate: 2.4,
+            framerate: 1.6,
             framesize: "640x480",
-            movie_duration: 10,
+            movie_duration: 15,
             output: path.join(motionDir, camera_name, 'timelapse.mp4'),
         });
     });
-    it("TESTTESToptions({days:...}) determines default end_date", function() {
+    it("options({days:...}) determines default end_date", function() {
         var days = 10;
         should(Timelapse.options({
             days,
@@ -38,7 +38,7 @@
             end_date: new Date(today.getTime() + days*24*3600*1000),
         });
     });
-    it("TESTTESToptions() adjusts framerate based on movie_duration", function() {
+    it("options() adjusts framerate based on movie_duration", function() {
         should(Timelapse.options({
             movie_duration: 5,
         })).properties({
@@ -84,7 +84,7 @@
             movie_duration: 10,
         });
     });
-    it("TESTTESToptions() has motionConf option", function() {
+    it("options() has motionConf option", function() {
         var framesize = "848x640";
         var camera_name = "laptopcam";
         var motionConf = new MotionConf({
@@ -111,7 +111,17 @@
 
         });
     });
-    it("TESTTESTcreateCommand() builds timelapse command line", function() {
+    it("createWeekTimelapse(opts) creates Timelapse for past week", function() {
+        var timelapse = Timelapse.createWeekTimelapse({});
+        should(timelapse).instanceof(Timelapse);
+        var date = new Date(new Date().getTime()-24*3600*1000);
+        date.setHours(23);
+        date.setMinutes(59);
+        date.setSeconds(59,999);
+        should.deepEqual(timelapse.end_date, date);
+        should.deepEqual(timelapse.start_date, new Date(date.getTime()-7*24*3600*1000+1));
+    });
+    it("createCommand() builds timelapse command line", function() {
         var snapshot_interval = 10;
         var start_date = new Date(2018,1,12,11,45,10);
         var end_date = new Date(2018,1,12,11,46,10);
@@ -140,7 +150,7 @@
         should(cmd).match(new RegExp(`-o ${output}`, "m"));
         should(cmd).match(/20180212-114510-snap.jpg 20180212-114610-snap.jpg/m);
     });
-    it("TESTTESTcreateMovie() returns filepath of created timelapse", function(done) {
+    it("createMovie() returns filepath of created timelapse", function(done) {
         (async function() {
             try {
                 var start_date = new Date(2018,1,12,11,45,10);

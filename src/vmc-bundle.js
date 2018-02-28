@@ -28,6 +28,9 @@
                 ]),
             });
             this.emitter = options.emitter || new EventEmitter();
+            this.emitter.on(VmcBundle.EVT_VMC_DAILY, date => {
+                this.onDaily(date);
+            });
             this.emitter.on(VmcBundle.EVT_CAMERA_ACTIVATE, value => {
                 this.onActivateCamera(value);
             });
@@ -51,6 +54,7 @@
         static get EVT_CAMERA_ACTIVATE() {return "camera_activate"; }
         static get EVT_CAMERA_ACTIVATED() {return "camera_activated"; }
         static get EVT_VMC_INITIALIZED() {return "vmc_initialized"; }
+        static get EVT_VMC_DAILY() {return "vmc_daily"; }
 
         scanSystem(conf) {
             var that = this;
@@ -123,6 +127,40 @@
             return this.putApiModel(req, res, next, this.name);
         }
 
+        onDaily(date=new Date()) {
+            var that = this;
+            return new Promise((resolve, reject) => {
+                try {
+                    var async = function*() {
+                        var result = {
+                            timelapses: [],
+                        };
+                        var end_date = Timelapse.priorDate(date);
+                        var mc = that.motionConf;
+                        for (var i=0; i<mc.cameras.length; i++) {
+                            var camera = mc.cameras[i];
+                            var timelapse = Timelapse.createWeekTimelapse({
+                                end_date,
+                                image_dir: path.join(mc.confDir, camera.camera_name),
+                                motionConf: mc,
+                            });
+                            result.timelapses.push(timelapse);
+                            yield timelapse.createMovie().then(r=>async.next(r)).catch(e=>{
+                                reject(e);
+                                async.throw(e);
+                            });
+                        };
+
+                        resolve(result);
+                    }();
+                    async.next();
+                } catch(e) {
+                    winston.error('GREEN',e.stack);
+                    reject(e);
+                }
+            });
+        }
+
         onActivateCamera(value) {
             this.activateCamera(!!value).then(r => {
                 winston.info(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ok`);
@@ -182,7 +220,7 @@
                     var camera_name = opts.camera_name;
                     var start_date = opts.start_date;
                     var end_date = opts.end_date;
-                    var movie_duration = opts.movie_duration || 15;
+                    var movie_duration = opts.movie_duration || this.motionConf.timelapse_duration;
                     var timelapse = new Timelapse({
                         motionConf: this.motionConf,
                         camera_name,
@@ -210,7 +248,7 @@
                 }
             });
         }
-
+        
         getState() {
             return {
                 api: 'vmc-bundle',

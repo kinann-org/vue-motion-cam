@@ -69,7 +69,7 @@
             </div>
                 <rb-api-dialog :apiSvc="apiSvc" v-if="apiModelCopy && apiModelCopy.rbHash ">
                     <div slot="title">All Camera Settings </div>
-                    <rb-dialog-row label="Motion API">
+                    <rb-dialog-row label="General">
                         <v-text-field v-model='apiModelCopy.version' 
                             label="Version" disabled class="input-group" />
                         <v-select v-model='apiModelCopy.usage' 
@@ -84,6 +84,8 @@
                             label="Streaming rate" class="input-group" ></v-select>
                         <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
                             label="Snapshot/timelapse interval" class="input-group" />
+                        <v-text-field v-model='apiModelCopy.timelapse_duration' 
+                            label="Timelapse movide duration (seconds)" class="input-group" />
                         <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
                             v-if="apiModelCopy.usage === 'custom'"
                             label="stream_maxrate" class="input-group" />
