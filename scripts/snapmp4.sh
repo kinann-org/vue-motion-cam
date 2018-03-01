@@ -1,4 +1,8 @@
 #/bin/bash
+
+NOTIMELAPSE=`dirname $0`
+NOTIMELAPSE=`realpath $NOTIMELAPSE/../src/ui/assets/no-timelapse.mp4`
+
 TMPDIR=`mktemp -d`
 
 DIR="."
@@ -54,6 +58,7 @@ done
 
 if [ "$IMAGES" = "0" ]; then
     >&2 echo "$0 no images found for timelapse start:$START end:$END"
+    ln -s `realpath "$DIR/$i"` "$NOTIMELAPSE"
     exit 1
 fi
 

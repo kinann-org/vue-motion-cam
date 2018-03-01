@@ -28,7 +28,7 @@
                 ]),
             });
             this.emitter = options.emitter || new EventEmitter();
-            this.emitter.on(VmcBundle.EVT_VMC_DAILY, date => {
+            this.emitter.on(VmcBundle.EVT_VMC_DAILY_EXEC, date => {
                 this.onDaily(date);
             });
             this.emitter.on(VmcBundle.EVT_CAMERA_ACTIVATE, value => {
@@ -55,6 +55,7 @@
         static get EVT_CAMERA_ACTIVATED() {return "camera_activated"; }
         static get EVT_VMC_INITIALIZED() {return "vmc_initialized"; }
         static get EVT_VMC_DAILY() {return "vmc_daily"; }
+        static get EVT_VMC_DAILY_RESULT() {return "vmc_daily_result"; }
 
         scanSystem(conf) {
             var that = this;
@@ -146,16 +147,20 @@
                             });
                             result.timelapses.push(timelapse);
                             yield timelapse.createMovie().then(r=>async.next(r)).catch(e=>{
+                                that.emitter.emit(VmcBundle.EVT_VMC_DAILY_RESULT, e);
+                                winston.error(`VmcBundle.onDaily(A)`, e.stack);
                                 reject(e);
                                 async.throw(e);
                             });
                         };
 
+                        that.emitter.emit(VmcBundle.EVT_VMC_DAILY_RESULT, result);
                         resolve(result);
                     }();
                     async.next();
                 } catch(e) {
-                    winston.error('GREEN',e.stack);
+                    winston.error(`VmcBundle.onDaily(B)`, e.stack);
+                    that.emitter.emit(VmcBundle.EVT_VMC_DAILY_RESULT, e);
                     reject(e);
                 }
             });

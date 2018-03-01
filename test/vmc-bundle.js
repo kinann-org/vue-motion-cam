@@ -378,6 +378,54 @@
         }();
         async.next();
     });
+    it("TESTTESTEVT_VMC_DAILY_EXEC triggers onDaily() ", function(done) {
+        var now = new Date();
+        var async = function*() { 
+            try {
+                var testDir = path.join(__dirname, 'onDaily');
+                var vmc = new VmcBundle("test_onDaily",{
+                    confDir: testDir,
+                    motion: {
+                        snapshot_interval: 1800,
+                    },
+                    cameras: [{
+                        camera_name: 'camera1',
+                        framesize: "800x600",
+                    }],
+                });
+                var date = new Date(2018,1,20);
+                var timelapsePath = path.join(testDir,'camera1','timelapse.mp4');
+                fs.existsSync(timelapsePath) && fs.unlinkSync(timelapsePath);
+                var r = yield(()=>{
+                    vmc.emitter.emit(VmcBundle.EVT_VMC_DAILY_EXEC, date);
+                    vmc.emitter.on(VmcBundle.EVT_VMC_DAILY_RESULT, r => async.next(r));
+                })();
+                should(r).not.instanceOf(Error);
+                should(r.timelapses).instanceOf(Array);
+                should(r.timelapses.length).equal(1);
+                r.timelapses.forEach(tl => should(tl).instanceOf(Timelapse));
+                should(r.timelapses[0].image_dir).equal(path.join(testDir,"camera1"));
+                should(r.timelapses[0].snapshot_interval).equal(1800);
+                should(r.timelapses[0].movie_duration).equal(15);
+                should(r.timelapses[0].framerate).approximately(22.4,0.1);
+                should(r.timelapses[0].framesize).equal('800x600');
+                should(r.timelapses[0].camera_name).equal("camera1");
+                should(r.timelapses[0].start_date.getFullYear()).equal(2018);
+                should(r.timelapses[0].start_date.getMonth()).equal(1);
+                should(r.timelapses[0].start_date.getDate()).equal(13);
+                should(r.timelapses[0].end_date.getFullYear()).equal(2018);
+                should(r.timelapses[0].end_date.getMonth()).equal(1);
+                should(r.timelapses[0].end_date.getDate()).equal(19);
+                var stat = fs.statSync(timelapsePath);
+                should(stat.ctime).above(now);
+                should(stat.size).equal(50509);
+                done();
+            } catch(e) {
+                done(e);
+            }
+        }();
+        async.next();
+    });
     it("finalize TEST suite", function() {
         app.locals.rbServer.close();
         winston.info("end test suite");
