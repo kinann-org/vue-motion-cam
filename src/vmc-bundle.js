@@ -53,9 +53,10 @@
                 emitter,
             });
             this.scheduler.addTask(new Task({
-                invoke_event: VmcBundle.EVT_VMC_INVOKE_DAILY,
+                name: `DailyTimelapse`,
+                event_invoke: VmcBundle.EVT_VMC_INVOKE_DAILY,
                 recur: Scheduler.RECUR_DAILY,
-                dueDate: Scheduler.dueDate(4,10), // create timelapses at 4:10AM
+                dueDate: Scheduler.dueDate(4,45), // create timelapses at 4:45AM
             }));
             this.scheduler.start();
         }
