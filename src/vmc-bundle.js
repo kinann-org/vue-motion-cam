@@ -55,8 +55,9 @@
             this.scheduler.addTask(new Task({
                 invoke_event: VmcBundle.EVT_VMC_INVOKE_DAILY,
                 recur: Scheduler.RECUR_DAILY,
-                dueDate: Scheduler.dueDate(1), // create timelapses at 1AM
+                dueDate: Scheduler.dueDate(3,21), // create timelapses at 1AM
             }));
+            this.scheduler.start();
         }
 
         initialize() {
@@ -186,7 +187,7 @@
 
         onActivateCamera(value) {
             this.activateCamera(!!value).then(r => {
-                winston.info(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ok`);
+                winston.debug(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ok`);
             }).catch(e => {
                 winston.error(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => error`, e.stack);
             });
@@ -197,7 +198,7 @@
                 camera_streaming: start,
             };
             if (start === this.streaming) {
-                winston.info(`VmcBundle.activateCamera(${this.streaming}->${start}) ignored`);
+                winston.debug(`VmcBundle.activateCamera(${this.streaming}->${start}) ignored`);
                 this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, start);
                 return Promise.resolve(status);
             }
