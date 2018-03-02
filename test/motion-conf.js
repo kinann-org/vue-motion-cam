@@ -323,6 +323,11 @@
         var conf4 = mc4.cameraConf();
         conf4.should.instanceOf(Array);
         conf4.length.should.equal(1);
+        conf4[0].should.match(/# camera_name:\tCAM1/m);  // v4
+        conf4[0].should.match(/text_left\tCAM1/m);  // v4
+        conf4[0].should.match(/target_dir\t.*CAM1/m);  // v4
+        conf4[0].should.match(/picture_filename\tCAM1.*/m);  // v4
+        conf4[0].should.match(/movie_filename\tCAM1.*/m);  // v4
         conf4[0].should.match(/\nstream_port\t8091\n/);  // v4
         conf4[0].should.not.match(/\nwebcam_port\t8091\n/);  // v3.2
         conf4[0].should.match(/\ninput\t-1\n/);  // v4

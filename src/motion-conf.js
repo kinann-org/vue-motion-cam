@@ -33,12 +33,24 @@
             if (opts.hasOwnProperty('signature')) {
                 this.signature = opts.signature;
             }
+            Object.defineProperty(this, 'text_left', {
+                enumerable: true,
+                get: () => { return this.camera_name; },
+            });
+            Object.defineProperty(this, 'target_dir', {
+                enumerable: true,
+                get: () => { return  path.join(motionDir, `${this.camera_name}`); }
+            });
+            Object.defineProperty(this, 'movie_filename', {
+                enumerable: true,
+                get: () => { return `${this.camera_name}-%Y%m%d-%H%M%S`; }
+            });
+            Object.defineProperty(this, 'picture_filename', {
+                enumerable: true,
+                get: () => { return `${this.camera_name}-%Y%m%d-%H%M%S-%q`; }
+            });
         }
 
-        get text_left() { return this.camera_name; }
-        get target_dir() { return  path.join(motionDir, `${this.camera_name}`); }
-        get movie_filename() { return `${this.camera_name}-%Y%m%d-%H%M%S`; }
-        get picture_filename() { return `${this.camera_name}-%Y%m%d-%H%M%S-%q`; }
     }
 
     class MotionConf {
