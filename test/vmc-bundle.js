@@ -383,7 +383,7 @@
         }();
         async.next();
     });
-    it("TESTTESTEVT_VMC_INVOKE_DAILY triggers onDaily() ", function(done) {
+    it("EVT_VMC_INVOKE_DAILY triggers onDaily() ", function(done) {
         var now = new Date();
         var async = function*() { 
             try {
@@ -398,6 +398,7 @@
                         framesize: "800x600",
                     }],
                 });
+                should(vmc.scheduler.isActive()).equal(true);
                 var date = new Date(2018,1,20);
                 var task = new Task({
                     name: 'testInvokeDaily',

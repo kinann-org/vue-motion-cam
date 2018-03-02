@@ -55,7 +55,7 @@
             this.scheduler.addTask(new Task({
                 invoke_event: VmcBundle.EVT_VMC_INVOKE_DAILY,
                 recur: Scheduler.RECUR_DAILY,
-                dueDate: Scheduler.dueDate(3,21), // create timelapses at 1AM
+                dueDate: Scheduler.dueDate(4,10), // create timelapses at 4:10AM
             }));
             this.scheduler.start();
         }
