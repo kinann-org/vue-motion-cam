@@ -10,8 +10,13 @@
     const supertest = require('supertest');
     const path = require('path');
     const srcPkg = require("../package.json");
-    const rb = require('rest-bundle');
-    const rbh = new rb.RbHash();
+    const {
+        Scheduler,
+        RestBundle,
+        RbHash,
+    } = require('rest-bundle');
+    const Task = Scheduler.Task;
+    const rbh = new RbHash();
     const fs = require('fs');
     const APIMODEL_PATH = `api-model/${srcPkg.name}.test.json`;
     const DEFAULT_CONF = new MotionConf().toJSON();
@@ -378,7 +383,7 @@
         }();
         async.next();
     });
-    it("TESTTESTEVT_VMC_DAILY_EXEC triggers onDaily() ", function(done) {
+    it("TESTTESTEVT_VMC_INVOKE_DAILY triggers onDaily() ", function(done) {
         var now = new Date();
         var async = function*() { 
             try {
@@ -394,10 +399,16 @@
                     }],
                 });
                 var date = new Date(2018,1,20);
+                var task = new Task({
+                    name: 'testInvokeDaily',
+                    data: {
+                        date,
+                    }
+                });
                 var timelapsePath = path.join(testDir,'camera1','timelapse.mp4');
                 fs.existsSync(timelapsePath) && fs.unlinkSync(timelapsePath);
                 var r = yield(()=>{
-                    vmc.emitter.emit(VmcBundle.EVT_VMC_DAILY_EXEC, date);
+                    vmc.emitter.emit(VmcBundle.EVT_VMC_INVOKE_DAILY, task);
                     vmc.emitter.on(VmcBundle.EVT_VMC_DAILY_RESULT, r => async.next(r));
                 })();
                 should(r).not.instanceOf(Error);

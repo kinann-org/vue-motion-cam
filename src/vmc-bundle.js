@@ -7,11 +7,15 @@
     const MotionConf = require("./motion-conf");
     const Timelapse = require("./timelapse");
     const V4L2Ctl = require("./v4l2-ctl");
-    const rb = require("rest-bundle");
+    const {
+        RestBundle,
+        Scheduler,
+    } = require("rest-bundle");
+    const Task = Scheduler.Task;
     const appdir = process.cwd();
     const motionDir = path.join(appdir, ".motion");
 
-    class VmcBundle extends rb.RestBundle {
+    class VmcBundle extends RestBundle {
         constructor(name = "test", options = {}) {
             super(name, Object.assign({
                 srcPkg,
@@ -27,11 +31,16 @@
                     this.resourceMethod("post", "timelapse", this.postTimelapse),
                 ]),
             });
-            this.emitter = options.emitter || new EventEmitter();
-            this.emitter.on(VmcBundle.EVT_VMC_DAILY_EXEC, date => {
-                this.onDaily(date);
+            var emitter = this.emitter = options.emitter || new EventEmitter();
+            emitter.on(VmcBundle.EVT_VMC_INVOKE_DAILY, task => {
+                this.onDaily(task.data && task.data.date).then(r => {
+                    task.done(r);
+                }).catch(e => {
+                    winston.error(`EVT_VMC_INVOKE_DAILY failed:`, e.stack);
+                    task.done(e);
+                });
             });
-            this.emitter.on(VmcBundle.EVT_CAMERA_ACTIVATE, value => {
+            emitter.on(VmcBundle.EVT_CAMERA_ACTIVATE, value => {
                 this.onActivateCamera(value);
             });
             this.motionConf = new MotionConf(Object.assign(options, {
@@ -40,6 +49,14 @@
             this.options = Object.assign({}, options);
             this.devices = [];
             this.streaming = false;
+            this.scheduler = new Scheduler({
+                emitter,
+            });
+            this.scheduler.addTask(new Task({
+                invoke_event: VmcBundle.EVT_VMC_INVOKE_DAILY,
+                recur: Scheduler.RECUR_DAILY,
+                dueDate: Scheduler.dueDate(1), // create timelapses at 1AM
+            }));
         }
 
         initialize() {
@@ -54,7 +71,7 @@
         static get EVT_CAMERA_ACTIVATE() {return "camera_activate"; }
         static get EVT_CAMERA_ACTIVATED() {return "camera_activated"; }
         static get EVT_VMC_INITIALIZED() {return "vmc_initialized"; }
-        static get EVT_VMC_DAILY() {return "vmc_daily"; }
+        static get EVT_VMC_INVOKE_DAILY() {return "vmc_invoke_daily"; }
         static get EVT_VMC_DAILY_RESULT() {return "vmc_daily_result"; }
 
         scanSystem(conf) {
@@ -129,6 +146,7 @@
         }
 
         onDaily(date=new Date()) {
+            winston.info(`VmcBundle.onDaily() date:${date}`);
             var that = this;
             return new Promise((resolve, reject) => {
                 try {

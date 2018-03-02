@@ -58,7 +58,7 @@ done
 
 if [ "$IMAGES" = "0" ]; then
     >&2 echo "$0 no images found for timelapse start:$START end:$END"
-    ln -s `realpath "$DIR/$i"` "$NOTIMELAPSE"
+    cp "$NOTIMELAPSE" $OUT
     exit 1
 fi
 

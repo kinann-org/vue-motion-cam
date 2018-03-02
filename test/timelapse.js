@@ -151,7 +151,7 @@
         should(cmd).match(/20180212-114510-snap.jpg 20180212-114610-snap.jpg/m);
     });
     it("createMovie() returns filepath of created timelapse", function(done) {
-        (async function() {
+        var async = function*() {
             try {
                 var start_date = new Date(2018,1,12,11,45,10);
                 var end_date = new Date(2018,1,12,11,46,10);
@@ -170,7 +170,11 @@
                     fs.unlinkSync(output);
                 }
                 winston.info(timelapse.createCommand());
-                var result = await timelapse.createMovie();
+                var result = yield timelapse.createMovie().then(r=>async.next(r)).catch(e => {
+                    winston.error(e.stack);
+                    done(e);
+                    async.throw(e);
+                });
                 should(result).equal(output);
                 should(fs.statSync(result)).properties({
                     size: 56992,
@@ -180,7 +184,8 @@
                 winston.error(e.stack);
                 done(e);
             }
-        })();
+        }();
+        async.next();
         
     });
 })
