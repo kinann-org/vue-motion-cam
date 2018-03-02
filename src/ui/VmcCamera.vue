@@ -39,11 +39,8 @@
                             >
                           <v-list-tile-title>Open webcam page</v-list-tile-title>
                         </v-list-tile>
-                        <v-list-tile @click="timelapse(camera,7)">
+                        <v-list-tile @click="dailyTimelapse(camera)">
                           <v-list-tile-title>Timelapse (week)</v-list-tile-title>
-                        </v-list-tile>
-                        <v-list-tile @click="timelapse(camera,30)">
-                          <v-list-tile-title>Timelapse< (month)</v-list-tile-title>
                         </v-list-tile>
                       </v-list>
                     </v-menu>
@@ -228,7 +225,11 @@ export default {
         openCameraPage(camera) {
             window.open(this.cameraUrl(camera), "_blank");
         },
-        timelapse(camera, days) {
+        dailyTimelapse(camera, days) {
+            var url = [this.restOrigin(),this.service, "motion", camera.camera_name, "timelapse.mp4"].join("/");
+            var mp4win = window.open(url,"_blank");
+        },
+        createTimelapse(camera, days) {
             var newurl = [this.restOrigin(),"vue-motion-cam", "ui", "timelapse.html"].join("/");
             var url = [this.restOrigin(), this.service, "timelapse"].join("/");
             var mp4win = window.open(newurl,"_blank");

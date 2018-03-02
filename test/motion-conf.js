@@ -1,11 +1,14 @@
-(typeof describe === 'function') && describe("vue-motion-cam", function() {
+(typeof describe === 'function') && describe("MotionConf", function() {
     const should = require("should");
     const path = require("path");
     const fs = require("fs");
     const child_process = require("child_process");
     const winston = require("winston");
     winston.level = 'warn';
-    const MotionConf = exports.MotionConf || require("../index").MotionConf;
+    const {
+        MotionConf,
+    } = require("../index");
+    const Camera = MotionConf.Camera;
     const appDir = process.cwd();
     const confDir = path.join(appDir, ".motion");
     const CONF_NAME = "motion-test.conf";
@@ -67,6 +70,14 @@
     it("toJSON() return serializable api model", function() {
         var mc = new MotionConf({
             version: DEFAULT_VERSION,
+            cameras: [{
+            },{
+                camera_name: 'blue',
+                movie_filename: 'ignored',
+                picture_filename: 'ignored',
+                text_left: 'ignored',
+                target_dir: 'ignored',
+            }],
         });
         var apiModel = mc.toJSON();
         should.deepEqual(apiModel.motion, defaultMotion);
@@ -74,14 +85,28 @@
             type: "MotionConf",
             version: DEFAULT_VERSION,
         });
-        should(apiModel.cameras.length).equal(1);
+        should(apiModel.cameras.length).equal(2);
         should(apiModel.cameras[0]).properties({
             camera_id: 1,
+            camera_name: 'CAM1',
             framesize: '640x480',
             input: -1,
+            text_left: 'CAM1',
             movie_filename: 'CAM1-%Y%m%d-%H%M%S',
             picture_filename: 'CAM1-%Y%m%d-%H%M%S-%q',
+            target_dir: path.join(__dirname, '..', '.motion', 'CAM1'),
             stream_port: 8091,
+        });
+        should(apiModel.cameras[1]).properties({
+            camera_id: 2,
+            camera_name: 'blue',
+            framesize: '640x480',
+            input: -1,
+            text_left: 'blue',
+            movie_filename: 'blue-%Y%m%d-%H%M%S',
+            picture_filename: 'blue-%Y%m%d-%H%M%S-%q',
+            target_dir: path.join(__dirname, '..', '.motion', 'blue'),
+            stream_port: 8092,
         });
     });
     it("motionConf() returns text for motion.conf version 4", function() {
@@ -479,7 +504,7 @@
         // if devices don't change, re-binding is harmless
         const oldCameras = JSON.parse(JSON.stringify(mc.cameras));
         mc.bindDevices(devices);
-        should.deepEqual(mc.cameras, oldCameras);
+        should.deepEqual(JSON.parse(JSON.stringify(mc.cameras)), oldCameras);
         should.deepEqual(mc.cameras.map(c=>c.camera_name), ['mycam1', 'mycam2', 'CAM3']);
 
         // if a new device is added, existing bindings don't change
@@ -494,9 +519,11 @@
         should.deepEqual(mc.cameras.map(c=>c.videodevice), 
             ['/dev/video1', '/dev/video0', '/dev/video2', '/dev/video3']);
         for (var i=0; i<oldCameras.length; i++) {
-            should.deepEqual(mc.cameras[i], oldCameras[i]);
+            should.deepEqual(JSON.parse(JSON.stringify(mc.cameras[i])), oldCameras[i]);
         };
-        should.deepEqual(mc.cameras.slice(0,oldCameras.length), oldCameras);
+        should.deepEqual(
+            JSON.parse(JSON.stringify(mc.cameras.slice(0,oldCameras.length))), 
+            oldCameras);
 
         // if a device becomes inactive, it's camera is deleted
         const delDevices = JSON.parse(JSON.stringify(newDevices));

@@ -22,6 +22,25 @@
         'manual': 86400,
     };
 
+    class Camera {
+        constructor(id, webcontrol_port, opts={}) {
+            this.camera_id = opts.camera_id || id,
+            this.input = -1,
+            this.stream_port = opts.stream_port || (id + webcontrol_port);
+            this.camera_name = opts.camera_name || `CAM${id}`;
+            this.videodevice = opts.videodevice ||`/dev/video${id-1}`;
+            this.framesize = opts.framesize || "640x480";
+            if (opts.hasOwnProperty('signature')) {
+                this.signature = opts.signature;
+            }
+        }
+
+        get text_left() { return this.camera_name; }
+        get target_dir() { return  path.join(motionDir, `${this.camera_name}`); }
+        get movie_filename() { return `${this.camera_name}-%Y%m%d-%H%M%S`; }
+        get picture_filename() { return `${this.camera_name}-%Y%m%d-%H%M%S-%q`; }
+    }
+
     class MotionConf {
         constructor(options = {}) {
             this.type = this.constructor.name;
@@ -58,10 +77,11 @@
             }, options.motion);
             var nCams = options.cameras && options.cameras.length || 1;
             var optionCams = options.cameras && options.cameras.length && options.cameras || [{}];
-            var cameras = new Array(nCams).fill({});
-            this.cameras = cameras.map((cam, i) => {
-                return Object.assign(this.defaultCamera(i+1), optionCams[i]);
-            });
+            this.cameras = [];
+            for (var i = 0; i < nCams; i++) {
+                var camera = new Camera(i+1, this.motion.webcontrol_port, optionCams[i]);
+                this.cameras.push(camera);
+            }
             var that = this;
             this.spawner = new Spawner({
                 logName: this.motion.logfile,
@@ -73,6 +93,7 @@
             return `motion-${this.name}.conf`;
         }
 
+        static get Camera() { return Camera; }
         static installedVersion() {
             return new Promise((resolve, reject) => {
                 var cmd = 'bash -c "motion -h 2>&1 | sed -n 1p | sed \\"s/[^0-9]*\\([0-9.]*\\).*/\\1/\\""';
@@ -328,20 +349,24 @@
             return this.spawner.kill();
         }
 
-        defaultCamera(id) {
-            var cam = `CAM${id}`;
-            return {
-                camera_id: id,
+        createCamera(id, opts={}) {
+            var cam = opts.camera_name || `CAM${id}`;
+            var camera = {
+                camera_id: opts.camera_id || id,
                 input: -1,
                 movie_filename: `${cam}-%Y%m%d-%H%M%S`,
                 picture_filename: `${cam}-%Y%m%d-%H%M%S-%q`,
-                stream_port: id + this.motion.webcontrol_port,
+                stream_port: opts.stream_port || (id + this.motion.webcontrol_port),
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,
                 camera_name: `${cam}`,
-                videodevice: `/dev/video${id-1}`,
-                framesize: "640x480",
+                videodevice: opts.videodevice ||`/dev/video${id-1}`,
+                framesize: opts.framesize || "640x480",
             }
+            if (opts.hasOwnProperty('signature')) {
+                camera.signature = opts.signature;
+            }
+            return camera;
         }
 
         bindDevices(devices) {
@@ -360,7 +385,7 @@
                     camera = camera || cameras.filter(c => 
                         c.signature == null && c.videodevice === device.filepath)[0];
                     if (camera == null) { // not found
-                        camera = this.defaultCamera(cameras.length+1);
+                        camera = new Camera(cameras.length+1, this.motion.webcontrol_port);
                         cameras.push(camera);
                         camera.camera_name = null; // assigned later
                     }
