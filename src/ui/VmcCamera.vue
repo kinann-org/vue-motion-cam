@@ -39,8 +39,11 @@
                             >
                           <v-list-tile-title>Open webcam page</v-list-tile-title>
                         </v-list-tile>
-                        <v-list-tile @click="dailyTimelapse(camera)">
-                          <v-list-tile-title>Timelapse (week)</v-list-tile-title>
+                        <v-list-tile @click="dailyTimelapse(camera,1)">
+                          <v-list-tile-title>Timelapse (1-day)</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile @click="dailyTimelapse(camera,5)">
+                          <v-list-tile-title>Timelapse (5-day)</v-list-tile-title>
                         </v-list-tile>
                       </v-list>
                     </v-menu>
@@ -82,7 +85,7 @@
                         <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
                             label="Snapshot/timelapse interval" class="input-group" />
                         <v-text-field v-model='apiModelCopy.timelapse_duration' 
-                            label="Timelapse movide duration (seconds)" class="input-group" />
+                            label="Timelapse movie duration (seconds)" class="input-group" />
                         <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
                             v-if="apiModelCopy.usage === 'custom'"
                             label="stream_maxrate" class="input-group" />
@@ -226,7 +229,7 @@ export default {
             window.open(this.cameraUrl(camera), "_blank");
         },
         dailyTimelapse(camera, days) {
-            var url = [this.restOrigin(),this.service, "motion", camera.camera_name, "timelapse.mp4"].join("/");
+            var url = [this.restOrigin(),this.service, "motion", camera.camera_name, `timelapse-${days}.mp4`].join("/");
             var mp4win = window.open(url,"_blank");
         },
         createTimelapse(camera, days) {

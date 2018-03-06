@@ -339,7 +339,7 @@
         }();
         async.next();
     });
-    it("onDaily(date) performs daily tasks", function(done) {
+    it("TESTTESTonDaily(date) performs daily tasks", function(done) {
         var now = new Date();
         var async = function*() { 
             try {
@@ -357,9 +357,9 @@
                 var date = new Date(2018,1,20);
                 var timelapsePath = path.join(testDir,'camera1','timelapse-5.mp4');
                 fs.existsSync(timelapsePath) && fs.unlinkSync(timelapsePath);
-                var r = yield vmc.onDaily(date).then(r=>async.next(r)).catch(e=>async.throw(e));
+                var r = yield vmc.onDaily(date).then(r=>async.next(r)).catch(e=> async.throw(e));
                 should(r.timelapses).instanceOf(Array);
-                should(r.timelapses.length).equal(1);
+                should(r.timelapses.length).equal(2);
                 r.timelapses.forEach(tl => should(tl).instanceOf(Timelapse));
                 should(r.timelapses[0].image_dir).equal(path.join(testDir,"camera1"));
                 should(r.timelapses[0].snapshot_interval).equal(1800);
@@ -376,6 +376,9 @@
                 var stat = fs.statSync(timelapsePath);
                 should(stat.ctime).above(now);
                 should(stat.size).equal(56374);
+                var timelapsePath = path.join(testDir,'camera1','timelapse-1.mp4');
+                var stat = fs.statSync(timelapsePath);
+                should(stat.size).equal(9684); // no-timelapse.mp4
                 done();
             } catch(e) {
                 done(e);
@@ -414,7 +417,7 @@
                 })();
                 should(r).not.instanceOf(Error);
                 should(r.timelapses).instanceOf(Array);
-                should(r.timelapses.length).equal(1);
+                should(r.timelapses.length).equal(2);
                 r.timelapses.forEach(tl => should(tl).instanceOf(Timelapse));
                 should(r.timelapses[0].image_dir).equal(path.join(testDir,"camera1"));
                 should(r.timelapses[0].snapshot_interval).equal(1800);

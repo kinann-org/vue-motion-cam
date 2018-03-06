@@ -59,6 +59,7 @@ done
 if [ "$IMAGES" = "0" ]; then
     >&2 echo "$0 no images found for timelapse start:$START end:$END"
     cp "$NOTIMELAPSE" $OUT
+    echo $OUT
     exit 1
 fi
 

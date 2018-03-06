@@ -23,7 +23,7 @@
 
         static createDailyTimelapse(opts={}) {
             var days = opts.days || 7;
-            var motion_conf = opts.motion_conf || new MotionConf();
+            var motionConf = opts.motionConf || new MotionConf();
             var end_date = opts.end_date || Timelapse.priorDate();
             var start_date = new Date(end_date.getTime()-days*24*3600*1000+1);
             var output_file = opts.output_file || `timelapse-${days}.mp4`;
@@ -117,8 +117,14 @@
                         shell: '/bin/bash',
                     },(error, stdout, stderr) => {
                         if (error) {
-                            winston.error("Timelapse.createMovie()", error.stack);
-                            reject(error);
+                            if (error.message.match(/no images found/)) {
+                                var output = stdout.trim();
+                                winston.info(`Timelapse.createMovie() output:${output}`);
+                                resolve(output);
+                            } else {
+                                winston.error("Timelapse.createMovie()", error.stack);
+                                reject(error);
+                            }
                         } else {
                             var output = stdout.trim();
                             winston.info(`Timelapse.createMovie() output:${output}`);
