@@ -111,8 +111,8 @@
 
         });
     });
-    it("createWeekTimelapse(opts) creates Timelapse for past week", function() {
-        var timelapse = Timelapse.createWeekTimelapse({});
+    it("createDailyTimelapse(opts) creates Timelapse for past week", function() {
+        var timelapse = Timelapse.createDailyTimelapse({});
         should(timelapse).instanceof(Timelapse);
         var date = new Date(new Date().getTime()-24*3600*1000);
         date.setHours(23);

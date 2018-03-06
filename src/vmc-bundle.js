@@ -160,7 +160,7 @@
                         var mc = that.motionConf;
                         for (var i=0; i<mc.cameras.length; i++) {
                             var camera = mc.cameras[i];
-                            var timelapse = Timelapse.createWeekTimelapse({
+                            var timelapse = Timelapse.createDailyTimelapse({
                                 end_date,
                                 image_dir: path.join(mc.confDir, camera.camera_name),
                                 motionConf: mc,

@@ -21,9 +21,11 @@
             return date;
         }
 
-        static createWeekTimelapse(opts={}) {
+        static createDailyTimelapse(opts={}) {
+            var days = opts.days || 7;
+            var motion_conf = opts.motion_conf || new MotionConf();
             var end_date = opts.end_date || Timelapse.priorDate();
-            var start_date = new Date(end_date.getTime()-7*24*3600*1000+1);
+            var start_date = new Date(end_date.getTime()-days*24*3600*1000+1);
             return new Timelapse(Object.assign({
                 end_date,
                 start_date,
@@ -67,6 +69,7 @@
                 }
             }
             var image_dir = opts.image_dir || path.join(mc.confDir, camName);
+            var output_file = opts.output_file || 'timelapse.mp4';
             return Object.assign({}, {
                 snapshot_interval,
                 camera_name: camName,
@@ -75,7 +78,7 @@
                 end_date,
                 framerate,
                 framesize: opts.framesize || cam.framesize || "640x480",
-                output: opts.output || path.join(image_dir, 'timelapse.mp4'),
+                output: opts.output || path.join(image_dir, output_file),
                 movie_duration: movie_duration,
             });
         }
