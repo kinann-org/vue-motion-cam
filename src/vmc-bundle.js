@@ -164,6 +164,7 @@
                                 end_date,
                                 image_dir: path.join(mc.confDir, camera.camera_name),
                                 motionConf: mc,
+                                days: 5,
                             });
                             result.timelapses.push(timelapse);
                             yield timelapse.createMovie().then(r=>async.next(r)).catch(e=>{

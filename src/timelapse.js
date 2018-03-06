@@ -26,9 +26,11 @@
             var motion_conf = opts.motion_conf || new MotionConf();
             var end_date = opts.end_date || Timelapse.priorDate();
             var start_date = new Date(end_date.getTime()-days*24*3600*1000+1);
+            var output_file = opts.output_file || `timelapse-${days}.mp4`;
             return new Timelapse(Object.assign({
                 end_date,
                 start_date,
+                output_file,
             }, opts));
         }
 
