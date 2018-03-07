@@ -56,7 +56,7 @@
                 name: `DailyTimelapse`,
                 event_invoke: VmcBundle.EVT_VMC_INVOKE_DAILY,
                 recur: Scheduler.RECUR_DAILY,
-                dueDate: Scheduler.dueDate(4,45), // create timelapses at 4:45AM
+                dueDate: Scheduler.dueDate(0,30), // create timelapses at 12:30AM
             }));
             this.scheduler.start();
         }
