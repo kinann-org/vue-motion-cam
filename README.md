@@ -1,10 +1,12 @@
-<code>&lt;vue-motion-cam&gt;</code> is a Vue/Vuetify RestBundle for motion capture from one or more USB cameras.
+<code>&lt;vue-motion-cam&gt;</code> is a Vue/Vuetify RestBundle microservice wrapper for 
+[motion](https://motion-project.github.io/), which manages streaming video, timelapses, etc. for
+available cameras.
 
 * **settings dialog** lets user update and save individual camera settings such as <var>framesize</var>
 * **auto-device recognition** pairs active USB video devices with new/existing camera settings.
 * **vuex store** shares camera state and configuration.
 * **auto-generates motion configuration files** from JSON camera settings saved on hosting server.
-* **weekly/monthly timelapse movies** movies generated on demand from web page.
+* **timelapse movies** automatically generated daily for 1-day and 5-day timespans.
 
 ### Installation
 ```bash
