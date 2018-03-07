@@ -92,7 +92,7 @@
                         <v-select v-model='apiModelCopy.motion.stream_quality' 
                             :items="stream_quality" item-text='text' item-value='value'
                             v-if="apiModelCopy.usage !== 'custom'"
-                            label="Picture quality" class="input-group" ></v-select>
+                            label="Streaming picture quality" class="input-group" ></v-select>
                         <v-text-field v-model='apiModelCopy.motion.stream_quality' 
                             v-if="apiModelCopy.usage === 'custom'"
                             label="stream_quality" class="input-group" />
