@@ -1,6 +1,6 @@
 <template>
 
-<vmc-camera service="test"></vmc-camera>
+<vmc-camera service="test" nominalH="500"></vmc-camera>
 
 </template><script>
 

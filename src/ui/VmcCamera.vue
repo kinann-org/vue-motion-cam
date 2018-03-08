@@ -6,6 +6,7 @@
         </p>
         <rb-about-item name="about" value="false" slot="prop">Show this descriptive text</rb-about-item>
         <rb-about-item name="service" value="test" slot="prop">RestBundle name</rb-about-item>
+        <rb-about-item name="nominalH" value="500" slot="prop">Full display image height in pixels</rb-about-item>
     </rb-about>
 
     <div class="vmc-frame">
@@ -129,6 +130,9 @@ export default {
         rbvue.mixins.RbApiMixin.createMixin("motion-conf"),
     ],
     props: {
+        nominalH: {
+            default: 500,
+        },
     },
     data: function() {
         return {
@@ -194,13 +198,14 @@ export default {
         refreshCameras() {
         },
         imgHeight(camera) {
-            return `${this.imageScales[this.scaleIndex] * 480}px`;
+            var nominalH = this.nominalH || 480;
+            return `${this.imageScales[this.scaleIndex] * nominalH}px`;
         },
         imgWidth(camera) {
             var wh = camera.framesize.split('x');
-            var aspect = wh[0]/wh[1] || 640/480;
-            var w = `${this.imageScales[this.scaleIndex] * 480*aspect}px`;
-            console.log(`w:${w}`);
+            var nominalH = this.nominalH || 480;
+            var nominalW = Math.round(nominalH*wh[0]/wh[1] || 640);
+            var w = `${this.imageScales[this.scaleIndex] * nominalW}px`;
             return w;
         },
         toggleCamera() {
