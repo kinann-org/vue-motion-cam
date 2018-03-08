@@ -115,9 +115,14 @@
                                 rejectWith(line);
                             } else if (action === Spawner.LINE_RESOLVE) {
                                 handled = true;
-                                winston.info(`Spawner resolve( process:${that.process.pid} )`);
-                                that.logger.info(`Spawner resolve( process:${that.process.pid} )`);
-                                resolve(that.process);
+                                if (that.process) {
+                                    var msg = `Spawner resolve( process:${that.process.pid} )`;
+                                    winston.info(msg);
+                                    that.logger.info(msg);
+                                    resolve(that.process);
+                                } else {
+                                    rejectWith(new Error(`No process for resolved line:${line}`));
+                                }
                             } else {
                                 winston.debug(`Spawner ignoring:`, line);
                             }

@@ -49,13 +49,13 @@
                     </v-menu>
                 </div>
                 <div @click='clickCamera(camera)' 
-                    :style='`height:${imgHeight};width:${imgWidth}`'
+                    :style='`height:${imgHeight(camera)};width:${imgWidth(camera)}`'
                 >
                     <img v-if='streaming && camera.stream_port' :src="cameraUrl(camera)" 
-                        :style='`height:${imgHeight};width:${imgWidth}`'
+                        :style='`height:${imgHeight(camera)};width:${imgWidth(camera)}`'
                         />
                     <div v-if='!streaming || camera.stream_port==null'
-                        :style='`height:${imgHeight};width:${imgWidth};`'
+                        :style='`height:${imgHeight(camera)};width:${imgWidth(camera)};`'
                         dark class='vmc-img-placeholder'
                         >
                         <div v-if='!streaming && camera.stream_port'
@@ -193,6 +193,16 @@ export default {
         },
         refreshCameras() {
         },
+        imgHeight(camera) {
+            return `${this.imageScales[this.scaleIndex] * 480}px`;
+        },
+        imgWidth(camera) {
+            var wh = camera.framesize.split('x');
+            var aspect = wh[0]/wh[1] || 640/480;
+            var w = `${this.imageScales[this.scaleIndex] * 480*aspect}px`;
+            console.log(`w:${w}`);
+            return w;
+        },
         toggleCamera() {
             var newStream = this.streaming ? false : true;
             this.rbService.streaming = null;
@@ -313,12 +323,6 @@ export default {
                 text: "Allow any host (my network is safe)",
                 value: "off",
             }];
-        },
-        imgHeight() {
-            return `${this.imageScales[this.scaleIndex] * 480}px`;
-        },
-        imgWidth() {
-            return `${this.imageScales[this.scaleIndex] * 640}px`;
         },
         cameraIcon() {
             return this.streaming ? 'videocam_off' : 'videocam';
