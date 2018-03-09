@@ -14,7 +14,10 @@
     const Task = Scheduler.Task;
     const appdir = process.cwd();
     const motionDir = path.join(appdir, ".motion");
-    const ACTIVATION_LOCKOUT = 1000 * 5; // allow motion to change state gracefully
+
+    // allow motion to change state gracefully by locking out all
+    // additional activation commands when an activation is in progress
+    const ACTIVATION_LOCKOUT = 1000 * 10;  // 10 seconds matters to Raspberry Pi 3
 
     class VmcBundle extends RestBundle {
         constructor(name = "test", options = {}) {
