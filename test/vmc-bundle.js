@@ -146,7 +146,7 @@
         }();
         async.next();
     });
-    it("POST /camera/stop stops camera service", function(done) {
+    it("TESTTESTPOST /camera/stop stops camera service", function(done) {
         var async = function* () {
             try {
                 var app = testInit();
@@ -172,7 +172,7 @@
         }();
         async.next();
     });
-    it("EVT_CAMERA_ACTIVATE activates camera", function(done) {
+    it("TESTTESTEVT_CAMERA_ACTIVATE activates camera", function(done) {
         this.timeout(5000);
         var async = function* () {
             try {
@@ -181,8 +181,13 @@
                     emitter,
                 });
                 should(vmc.streaming).equal(false);
+                should(vmc.motionConf).not.equal(null);
+                should(vmc.isActivationEnabled()).equal(true);
+                emitter.on(VmcBundle.EVT_CAMERA_ACTIVATED, (active)=> async.next(active));
                 emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, true);
-                yield emitter.on(VmcBundle.EVT_CAMERA_ACTIVATED, (active)=> async.next(active));
+                should(vmc.isActivationEnabled()).equal(false);
+                yield 'dummy'; // block until activated
+                should(vmc.isActivationEnabled()).equal(true);
                 should(vmc.streaming).equal(true);
                 yield emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, false);
                 yield setTimeout(() => async.next(), 100); // allow motion to stop
@@ -195,7 +200,7 @@
         }();
         async.next();
     });
-    it("activateCamera(start) returns promise resolved on activation", function(done) {
+    it("TESTTESTactivateCamera(start) returns promise resolved on activation", function(done) {
         this.timeout(5000);
         var async = function* () {
             try {

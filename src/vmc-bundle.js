@@ -14,6 +14,7 @@
     const Task = Scheduler.Task;
     const appdir = process.cwd();
     const motionDir = path.join(appdir, ".motion");
+    const ACTIVATION_LOCKOUT = 1000 * 5; // allow motion to change state gracefully
 
     class VmcBundle extends RestBundle {
         constructor(name = "test", options = {}) {
@@ -21,13 +22,15 @@
                 srcPkg,
             }, options));
 
+            this.activationDate = null;
             Object.defineProperty(this, "handlers", {
                 value: super.handlers.concat([
                     this.resourceMethod("get", "devices", this.getDevices),
                     this.resourceMethod("get", "motion-conf", this.getMotionConf),
                     this.resourceMethod("put", "motion-conf", this.putMotionConf),
-                    this.resourceMethod("post", "camera/start", this.postCameraStart),
-                    this.resourceMethod("post", "camera/stop", this.postCameraStop),
+                    this.resourceMethod("post", "camera/toggle", this.postCameraToggle), 
+                    this.resourceMethod("post", "camera/start", this.postCameraStart), // deprecated
+                    this.resourceMethod("post", "camera/stop", this.postCameraStop), // deprecated
                     this.resourceMethod("post", "timelapse", this.postTimelapse),
                 ]),
             });
@@ -202,11 +205,16 @@
         }
 
         onActivateCamera(value) {
-            this.activateCamera(!!value).then(r => {
-                winston.debug(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ok`);
-            }).catch(e => {
-                winston.error(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => error`, e.stack);
-            });
+            if (this.motionConf.automation) {
+                this.activateCamera(!!value).then(r => {
+                    winston.debug(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ok`);
+                }).catch(e => {
+                    winston.error(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => error`, e.stack);
+                });
+            } else {
+                winston.debug(`VmcBundle.onActivateCamera(${value}) EVT_CAMERA_ACTIVATE => ignored`);
+                this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, this.streaming);
+            }
         }
 
         activateCamera(start) {
@@ -215,6 +223,7 @@
             };
             if (start === this.streaming) {
                 winston.debug(`VmcBundle.activateCamera(${this.streaming}->${start}) ignored`);
+                this.activationDate = null;
                 this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, start);
                 return Promise.resolve(status);
             }
@@ -222,10 +231,19 @@
                 return new Promise((resolve, reject) => {
                     winston.info(`VmcBundle.activateCamera(${start}) pending initialization...`);
                     this.emitter.on(VmcBundle.EVT_VMC_INITIALIZED, () => {
-                        this.activateCamera(start).then(r => resolve(r)).catch(e=>reject(e));
+                        this.activateCamera(start).then(r => {
+                            this.activationDate = null;
+                            resolve(r);
+                        }).catch(e=>reject(e));
                     });
                 });
             }
+            if (!this.isActivationEnabled()) {
+                var e = new Error("Camera activation in progress. Try again later.");
+                winston.info(e.message);
+                return Promise.reject(e);
+            }
+            this.activationDate = new Date();
             winston.debug(`VmcBundle.activateCamera(${this.streaming}->${start})`);
             var that = this;
             return new Promise((resolve, reject) => {
@@ -234,20 +252,39 @@
                 (start ? mc.startCamera() : mc.stopCamera()).then(process => {
                     winston.info(`VmcBundle.activateCamera(${this.streaming}->${start}) ok`);
                     that.streaming = start;
+                    this.activationDate = null;
                     this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, start);
                     resolve(status);
                 }).catch(e => {
                     winston.error(`VmcBundle.activateCamera(${this.streaming}->${start}) error`, e.stack);
+                    this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATED, e);
                     reject(e);
                 });
             });
         }
 
-        postCameraStart(req, res, next) {
+        postCameraToggle(req, res, next) {
+            var data = req.body;
+            if (data.manual) {
+                winston.info(`postCameraToggle() camera_streaming:${data.camera_streaming} manual:true`);
+                return Object.assign(this.activateCamera(!!data.camera_streaming), {
+                    manual: true,
+                });
+            } else {
+                winston.info(`postCameraToggle() camera_streaming:${data.camera_streaming} manual:false`);
+                this.emitter.emit(VmcBundle.EVT_CAMERA_ACTIVATE, !!data.camera_streaming);
+                return {
+                    camera_streaming: this.streaming,
+                    manual: false,
+                };
+            }
+        }
+
+        postCameraStart(req, res, next) { // deprecated
             return this.activateCamera(true);
         }
 
-        postCameraStop(req, res, next) {
+        postCameraStop(req, res, next) { // deprecated
             return this.activateCamera(false);
         }
 
@@ -289,10 +326,17 @@
             });
         }
         
+        isActivationEnabled() {
+            return this.activationDate == null 
+                ? true 
+                : (Date.now()-this.activationDate.getTime()) >= ACTIVATION_LOCKOUT;
+        }
+
         getState() {
             return {
                 api: 'vmc-bundle',
                 streaming: this.streaming,
+                enableActivation: this.isActivationEnabled(),
                 devices: this.devices,
             };
         }

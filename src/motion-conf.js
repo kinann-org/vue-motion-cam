@@ -54,19 +54,21 @@
     }
 
     class MotionConf {
-        constructor(options = {}) {
+        constructor(opts = {}) {
             this.type = this.constructor.name;
-            this.usage = options.usage || 'stream';
+            this.usage = opts.usage || 'stream';
             this.status = null; //indeterminate
-            this.name = options.name || "test";
-            this.confDir = options.confDir || motionDir;
-            this.version = options.version || "3.2.12";
-            this.timelapse_duration = options.timelapse_duration || 15;
+            this.name = opts.name || "test";
+            this.confDir = opts.confDir || motionDir;
+            this.version = opts.version || "3.2.12";
+            this.timelapse_duration = opts.timelapse_duration || 15;
             winston.info(`MotionConf ${this.version}`);
             Object.defineProperty(this, "STATUS_UNKNOWN", { value: "unknown" });
             Object.defineProperty(this, "STATUS_OPEN", { value: "open" });
             Object.defineProperty(this, "STATUS_ERROR", { value: "error" });
             this.status = this.STATUS_UNKNOWN;
+            this.automation = opts.automation == null ? true : opts.automation;
+            this.eventHeartbeat = true;
             this.motion = Object.assign({
                 ffmpeg_output_movies: "on",
                 locate_motion_mode: "on",
@@ -86,9 +88,9 @@
                 webcontrol_html_output: "on",
                 webcontrol_localhost: "on",
                 webcontrol_port: 8090,
-            }, options.motion);
-            var nCams = options.cameras && options.cameras.length || 1;
-            var optionCams = options.cameras && options.cameras.length && options.cameras || [{}];
+            }, opts.motion);
+            var nCams = opts.cameras && opts.cameras.length || 1;
+            var optionCams = opts.cameras && opts.cameras.length && opts.cameras || [{}];
             this.cameras = [];
             for (var i = 0; i < nCams; i++) {
                 var camera = new Camera(i+1, this.motion.webcontrol_port, optionCams[i]);
@@ -261,6 +263,7 @@
             return {
                 type: this.type,
                 usage: this.usage,
+                automation: this.automation,
                 motion: this.motion,
                 cameras: this.cameras,
                 version: this.version,

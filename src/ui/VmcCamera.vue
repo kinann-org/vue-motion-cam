@@ -12,11 +12,11 @@
     <div class="vmc-frame">
         <div class="vmc-container">
             <div class="vmc-commands" xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
-                <v-btn light flat icon @click="toggleCamera()" >
-                    <v-icon v-show="streaming === false" >videocam</v-icon>
-                    <v-icon v-show="streaming === true" xstyle="border: 1pt solid red; border-radius: 7px;"
-                        >videocam_off</v-icon>
-                    <v-icon v-show="streaming == null" >hourglass_full</v-icon>
+                <v-btn light flat icon @click="toggleCamera()" :disabled="!enableActivation">
+                    <v-icon v-show="!enableActivation">lock</v-icon>
+                    <v-icon v-show="enableActivation && streaming === false">videocam</v-icon>
+                    <v-icon v-show="enableActivation && streaming === true">videocam_off</v-icon>
+                    <v-icon v-show="enableActivation && streaming == null" >hourglass_full</v-icon>
                 </v-btn>
                 <v-btn light flat icon @click="zoomCamera()" >
                     <v-icon >zoom_in</v-icon>
@@ -25,8 +25,7 @@
             <div v-for="(camera,icam) in cameras" :key="icam" class='vmc-feed ' >
                 <div class="vmc-feed-actions">
                     <div xs-2 offset-xs2 class="pl-1 pt-2 pb-0">
-                        <span v-show="streaming" style="color: #00ee00">&#x25cf;</span>
-                        <span v-show="!streaming" >&#x25cf;</span>
+                        <span :style="streamingLED">&#x25cf;</span>
                         {{camera.camera_name}}
                     </div>
                     <v-menu offset-y>
@@ -72,10 +71,17 @@
                     <div slot="title">All Camera Settings </div>
                     <rb-dialog-row label="General">
                         <v-text-field v-model='apiModelCopy.version' 
-                            label="Version" disabled class="input-group" />
+                            label="Motion version" disabled class="input-group" />
                         <v-select v-model='apiModelCopy.usage' 
                             :items="usages" item-text='text' item-value='value'
                             label="Usage" class="input-group" ></v-select>
+                        <v-select v-model='apiModelCopy.motion.webcontrol_localhost' 
+                            :items="localhost_items" item-text='text' item-value='value'
+                            label="Web control page" class="input-group" ></v-select>
+                        <v-checkbox v-model='apiModelCopy.automation'
+                            label="Respond to automation events" />
+                    </rb-dialog-row>
+                    <rb-dialog-row label="Streaming video">
                         <v-select v-model='apiModelCopy.motion.stream_localhost' 
                             :items="localhost_items" item-text='text' item-value='value'
                             label="Camera streaming" class="input-group" ></v-select>
@@ -83,10 +89,6 @@
                             :items="stream_rate" item-text='text' item-value='value'
                             v-if="apiModelCopy.usage !== 'custom'"
                             label="Streaming rate" class="input-group" ></v-select>
-                        <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
-                            label="Snapshot/timelapse interval" class="input-group" />
-                        <v-text-field v-model='apiModelCopy.timelapse_duration' 
-                            label="Timelapse movie duration (seconds)" class="input-group" />
                         <v-text-field v-model='apiModelCopy.motion.stream_maxrate' 
                             v-if="apiModelCopy.usage === 'custom'"
                             label="stream_maxrate" class="input-group" />
@@ -97,9 +99,12 @@
                         <v-text-field v-model='apiModelCopy.motion.stream_quality' 
                             v-if="apiModelCopy.usage === 'custom'"
                             label="stream_quality" class="input-group" />
-                        <v-select v-model='apiModelCopy.motion.webcontrol_localhost' 
-                            :items="localhost_items" item-text='text' item-value='value'
-                            label="Web control page" class="input-group" ></v-select>
+                    </rb-dialog-row>
+                    <rb-dialog-row label="Timelapse">
+                        <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
+                            label="Snapshot/timelapse interval" class="input-group" />
+                        <v-text-field v-model='apiModelCopy.timelapse_duration' 
+                            label="Timelapse movie duration (seconds)" class="input-group" />
                     </rb-dialog-row>
                     <rb-dialog-row v-for="(camera,icam) in apiModelCopy.cameras" :key="icam" label="Camera">
                         <v-text-field v-model='camera.camera_name' 
@@ -115,6 +120,15 @@
                 </rb-api-dialog>
         </div> <!-- vmc-container -->
     </div> <!-- vmc-frame -->
+    <div v-if='about'>
+        Send automation event:
+        <v-btn default @click="toggleCamera(true, false)">
+            On
+        </v-btn>
+        <v-btn default @click="toggleCamera(false, false)">
+            Off
+        </v-btn>
+    </div>
 </div>
 
 </template>
@@ -208,36 +222,24 @@ export default {
             var w = `${this.imageScales[this.scaleIndex] * nominalW}px`;
             return w;
         },
-        toggleCamera() {
-            var newStream = this.streaming ? false : true;
-            this.rbService.streaming = null;
-            if (newStream) {
-                var promise = this.startCamera();
-            } else {
-                var promise = this.stopCamera();
-            }
-            promise.then(r => (this.rbService.streaming = newStream));
-        },
         cameraUrl(camera) {
-            var rnd = Math.random();
-            return `http://${location.hostname}:${camera.stream_port}/?r=${rnd}`;
+            return `http://${location.hostname}:${camera.stream_port}/`;
+            //var rnd = Math.random();
+            //return `http://${location.hostname}:${camera.stream_port}/?r=${rnd}`;
         },
-        startCamera() {
-            var url = [this.restOrigin(),this.service,"camera", "start"].join("/");
-            return this.$http.post(url, "nodata").then(r => {
+        toggleCamera(camera_streaming = !this.streaming, manual=true) {
+            //this.rbService.streaming = null;
+            var data = {
+                camera_streaming,
+                manual,
+            }
+            var url = [this.restOrigin(),this.service,"camera", "toggle"].join("/");
+            return this.$http.post(url, data).then(r => {
                 console.log(`HTTP${r.status}`, JSON.stringify(r.data));
+                this.rbService.streaming = camera_streaming;
                 return r;
             }).catch(err => {
-                this.alertError(`Error starting cameras: ${err.message}`);
-            });
-        },
-        stopCamera() {
-            var url = [this.restOrigin(),this.service,"camera", "stop"].join("/");
-            return this.$http.post(url, "nodata").then(r => {
-                console.log(`HTTP${r.status}`, JSON.stringify(r.data));
-                return r;
-            }).catch(err => {
-                this.alertError(`Error stopping cameras: ${err.message}`);
+                this.alertError(`Error toggling cameras: ${err.message}`);
             });
         },
         openCameraPage(camera) {
@@ -272,6 +274,17 @@ export default {
         },
     },
     computed: {
+        streamingLED() {
+            if (this.apiModel && this.apiModel.automation) {
+                if (this.streaming) {
+                    return this.pushCount % 2 ? "color:#00ee00" : "color:#00cc00" ;
+                } else {
+                    return this.pushCount % 2 ? "color:#aa0000" : "color:#000";
+                }
+            } else {
+                return this.streaming ? "color:#00ee00" : "color:#000";
+            }
+        },
         usages() {
             return [{
                 text: "Streaming camera",
@@ -331,6 +344,9 @@ export default {
         },
         cameraIcon() {
             return this.streaming ? 'videocam_off' : 'videocam';
+        },
+        enableActivation() {
+            return this.rbService && this.rbService.enableActivation;
         },
         streaming() {
             return this.rbService.streaming;
