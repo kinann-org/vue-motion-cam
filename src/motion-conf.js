@@ -61,7 +61,6 @@
             this.name = opts.name || "test";
             this.confDir = opts.confDir || motionDir;
             this.version = opts.version || "3.2.12";
-            this.timelapse_duration = opts.timelapse_duration || 15;
             winston.info(`MotionConf ${this.version}`);
             Object.defineProperty(this, "STATUS_UNKNOWN", { value: "unknown" });
             Object.defineProperty(this, "STATUS_OPEN", { value: "open" });
@@ -69,6 +68,13 @@
             this.status = this.STATUS_UNKNOWN;
             this.automation = opts.automation == null ? true : opts.automation;
             this.eventHeartbeat = true;
+            this.timelapses = opts.timelapses || [{
+                fps: 3,
+                days: 1,
+            },{
+                fps: 15,
+                days: 5,
+            }];
             this.motion = Object.assign({
                 ffmpeg_output_movies: "on",
                 locate_motion_mode: "on",
@@ -267,7 +273,7 @@
                 motion: this.motion,
                 cameras: this.cameras,
                 version: this.version,
-                timelapse_duration: this.timelapse_duration,
+                timelapses: this.timelapses,
             }
         }
 

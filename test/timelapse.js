@@ -23,9 +23,9 @@
             image_dir: path.join(motionDir, "CAM1"),
             start_date: today,
             end_date: new Date(today.getTime()+24*3600*1000),
-            framerate: 1.6,
+            framerate: 2.4,
             framesize: "640x480",
-            movie_duration: 15,
+            movie_duration: 10,
             output: path.join(motionDir, camera_name, 'timelapse.mp4'),
         });
     });

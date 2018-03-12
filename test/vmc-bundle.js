@@ -368,8 +368,8 @@
                 r.timelapses.forEach(tl => should(tl).instanceOf(Timelapse));
                 should(r.timelapses[0].image_dir).equal(path.join(testDir,"camera1"));
                 should(r.timelapses[0].snapshot_interval).equal(1800);
-                should(r.timelapses[0].movie_duration).equal(15);
-                should(r.timelapses[0].framerate).approximately(80/5,0.1);
+                should(r.timelapses[0].movie_duration).equal(10);
+                should(r.timelapses[0].framerate).approximately(24,0.1);
                 should(r.timelapses[0].framesize).equal('800x600');
                 should(r.timelapses[0].camera_name).equal("camera1");
                 should(r.timelapses[0].start_date.getFullYear()).equal(2018);
@@ -380,7 +380,7 @@
                 should(r.timelapses[0].end_date.getDate()).equal(19);
                 var stat = fs.statSync(timelapsePath);
                 should(stat.ctime).above(now);
-                should(stat.size).equal(56374);
+                should(stat.size).equal(49204);
                 var timelapsePath = path.join(testDir,'camera1','timelapse-1.mp4');
                 var stat = fs.statSync(timelapsePath);
                 should(stat.size).equal(9684); // no-timelapse.mp4
@@ -426,8 +426,8 @@
                 r.timelapses.forEach(tl => should(tl).instanceOf(Timelapse));
                 should(r.timelapses[0].image_dir).equal(path.join(testDir,"camera1"));
                 should(r.timelapses[0].snapshot_interval).equal(1800);
-                should(r.timelapses[0].movie_duration).equal(15);
-                should(r.timelapses[0].framerate).approximately(16,0.1);
+                should(r.timelapses[0].movie_duration).equal(10);
+                should(r.timelapses[0].framerate).approximately(24,0.1);
                 should(r.timelapses[0].framesize).equal('800x600');
                 should(r.timelapses[0].camera_name).equal("camera1");
                 should(r.timelapses[0].start_date.getFullYear()).equal(2018);
@@ -438,7 +438,7 @@
                 should(r.timelapses[0].end_date.getDate()).equal(19);
                 var stat = fs.statSync(timelapsePath);
                 should(stat.ctime).above(now);
-                should(stat.size).equal(56374);
+                should(stat.size).equal(49204);
                 done();
             } catch(e) {
                 done(e);

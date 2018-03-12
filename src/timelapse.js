@@ -61,7 +61,7 @@
             } else {
                 var framerate_min = Number(opts.framerate_min) || MIN_FRAMERATE;
                 var framerate_max = Number(opts.framerate_max) || MAX_FRAMERATE;
-                var movie_duration = Number(opts.movie_duration) || mc.timelapse_duration || 10;
+                var movie_duration = Number(opts.movie_duration) || 10;
                 var framerate = nImages / movie_duration ;
                 if (framerate < framerate_min) {
                     framerate = framerate_min;

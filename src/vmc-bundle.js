@@ -300,14 +300,19 @@
                     var camera_name = opts.camera_name;
                     var start_date = opts.start_date;
                     var end_date = opts.end_date;
-                    var movie_duration = opts.movie_duration || this.motionConf.timelapse_duration;
-                    var timelapse = new Timelapse({
+                    var  config = {
                         motionConf: this.motionConf,
                         camera_name,
                         start_date,
                         end_date,
-                        movie_duration,
-                    });
+                    };
+                    if (opts.framerate) {
+                        config.framerate = opts.framerate;
+                    } else {
+                        config.movie_duration = opts.movie_duration || 10;
+                    }
+
+                    var timelapse = new Timelapse(config);
                     timelapse.createMovie().then(mp4FilePath => {
                         var result = {
                             movie_duration: timelapse.movie_duration,

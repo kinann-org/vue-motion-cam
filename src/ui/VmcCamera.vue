@@ -35,15 +35,12 @@
                           <v-list-tile-title>Edit all camera settings</v-list-tile-title>
                         </v-list-tile>
                         <v-list-tile @click="openCameraPage(camera)"
-                            :disabled="!streaming"
-                            >
+                            :disabled="!streaming" >
                           <v-list-tile-title>Open webcam page</v-list-tile-title>
                         </v-list-tile>
-                        <v-list-tile @click="dailyTimelapse(camera,1)">
-                          <v-list-tile-title>Timelapse (1-day)</v-list-tile-title>
-                        </v-list-tile>
-                        <v-list-tile @click="dailyTimelapse(camera,5)">
-                          <v-list-tile-title>Timelapse (5-day)</v-list-tile-title>
+                        <v-list-tile v-for="(timelapse,i) in apiModel.timelapses" :key="i"
+                            @click="dailyTimelapse(camera,timelapse.days)">
+                          <v-list-tile-title>Timelapse ({{timelapse.days}}-day)</v-list-tile-title>
                         </v-list-tile>
                       </v-list>
                     </v-menu>
@@ -103,8 +100,13 @@
                     <rb-dialog-row label="Timelapse">
                         <v-text-field v-model='apiModelCopy.motion.snapshot_interval' 
                             label="Snapshot/timelapse interval" class="input-group" />
-                        <v-text-field v-model='apiModelCopy.timelapse_duration' 
-                            label="Timelapse movie duration (seconds)" class="input-group" />
+                        <div v-for="(timelapse,i) in apiModelCopy.timelapses" :key="i"
+                            style="display:flex">
+                            <v-text-field v-model='timelapse.days' 
+                                :label="`Movie #${i+1} timespan (days)`" class="input-group pr-2" />
+                            <v-text-field v-model='timelapse.fps' 
+                                :label="`Movie #${i+1} frames/second`" class="input-group" />
+                        </div>
                     </rb-dialog-row>
                     <rb-dialog-row v-for="(camera,icam) in apiModelCopy.cameras" :key="icam" label="Camera">
                         <v-text-field v-model='camera.camera_name' 
