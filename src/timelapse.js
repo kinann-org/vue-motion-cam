@@ -54,7 +54,7 @@
                 new Date(start_date.getTime() + days*24*3600*1000);
             var nImages = (end_date - start_date)/1000/snapshot_interval;
             if (opts.framerate) {
-                var framerate = opts.framerate;
+                var framerate = Number(opts.framerate);
                 var framerate_min = Math.min(framerate, MIN_FRAMERATE);
                 var framerate_max = Math.max(framerate, MAX_FRAMERATE);
                 var movie_duration = nImages/framerate;

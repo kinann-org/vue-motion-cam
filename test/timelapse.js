@@ -111,8 +111,10 @@
 
         });
     });
-    it("createDailyTimelapse(opts) creates Timelapse for past week", function() {
-        var timelapse = Timelapse.createDailyTimelapse({});
+    it("TESTTESTcreateDailyTimelapse(opts) creates Timelapse for past week", function() {
+        var timelapse = Timelapse.createDailyTimelapse({
+            framerate: 30,
+        });
         should(timelapse).instanceof(Timelapse);
         var date = new Date(new Date().getTime()-24*3600*1000);
         date.setHours(23);
@@ -120,6 +122,9 @@
         date.setSeconds(59,999);
         should.deepEqual(timelapse.end_date, date);
         should.deepEqual(timelapse.start_date, new Date(date.getTime()-7*24*3600*1000+1));
+        should.deepEqual(timelapse.start_date, new Date(date.getTime()-7*24*3600*1000+1));
+        should.deepEqual(timelapse.framerate, 30);
+        should(timelapse.movie_duration).approximately(7*24/30,0.1);
     });
     it("createCommand() builds timelapse command line", function() {
         var snapshot_interval = 10;

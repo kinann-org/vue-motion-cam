@@ -75,6 +75,12 @@
                 fps: 15,
                 days: 5,
             }];
+            if (this.timelapses.length === 2) {
+                this.timelapses.push({
+                    fps: 30,
+                    days: 10,
+                });
+            }
             this.motion = Object.assign({
                 ffmpeg_output_movies: "on",
                 locate_motion_mode: "on",

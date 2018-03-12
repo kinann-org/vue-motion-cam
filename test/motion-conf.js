@@ -49,6 +49,9 @@
         },{
             fps: 15,
             days: 5,
+        },{
+            fps: 30,
+            days: 10,
         }]);
 
         var customMotion = Object.assign({}, defaultMotion, {

@@ -167,32 +167,23 @@
                         for (var i=0; i<mc.cameras.length; i++) {
                             var camera = mc.cameras[i];
                             var image_dir = path.join(mc.confDir, camera.camera_name);
-                            var timelapse = Timelapse.createDailyTimelapse({
-                                end_date,
-                                image_dir,
-                                motionConf: mc,
-                                days: 5,
-                            });
-                            result.timelapses.push(timelapse);
-                            yield timelapse.createMovie().then(r=>async.next(r)).catch(e=>{
-                                that.emitter.emit(VmcBundle.EVT_VMC_DAILY_RESULT, e);
-                                winston.error(`VmcBundle.onDaily((days:7})`, e.stack);
-                                reject(e);
-                                async.throw(e);
-                            });
-                            var timelapse = Timelapse.createDailyTimelapse({
-                                end_date,
-                                image_dir,
-                                motionConf: mc,
-                                days: 1,
-                            });
-                            result.timelapses.push(timelapse);
-                            yield timelapse.createMovie().then(r=>async.next(r)).catch(e=>{
-                                winston.error(`VmcBundle.onDaily((days:1})`, e.stack);
-                                that.emitter.emit(VmcBundle.EVT_VMC_DAILY_RESULT, e);
-                                reject(e);
-                                async.throw(e);
-                            });
+                            for (var itl = 0; itl < mc.timelapses.length; itl++) {
+                                var tl = mc.timelapses[itl];
+                                var timelapse = Timelapse.createDailyTimelapse({
+                                    end_date,
+                                    image_dir,
+                                    motionConf: mc,
+                                    framerate: tl.fps,
+                                    days: tl.days,
+                                });
+                                result.timelapses.push(timelapse);
+                                yield timelapse.createMovie().then(r=>async.next(r)).catch(e=>{
+                                    that.emitter.emit(VmcBundle.EVT_VMC_DAILY_RESULT, e);
+                                    winston.error(`VmcBundle.onDaily((days:${tl.days}})`, e.stack);
+                                    reject(e);
+                                    async.throw(e);
+                                });
+                            }
                         };
 
                         that.emitter.emit(VmcBundle.EVT_VMC_DAILY_RESULT, result);
