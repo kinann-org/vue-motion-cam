@@ -146,7 +146,7 @@
         }();
         async.next();
     });
-    it("TESTTESTPOST /camera/stop stops camera service", function(done) {
+    it("POST /camera/stop stops camera service", function(done) {
         var async = function* () {
             try {
                 var app = testInit();
@@ -172,7 +172,7 @@
         }();
         async.next();
     });
-    it("TESTTESTEVT_CAMERA_ACTIVATE activates camera", function(done) {
+    it("EVT_CAMERA_ACTIVATE activates camera", function(done) {
         this.timeout(5000);
         var async = function* () {
             try {
@@ -200,7 +200,7 @@
         }();
         async.next();
     });
-    it("TESTTESTactivateCamera(start) returns promise resolved on activation", function(done) {
+    it("activateCamera(start) returns promise resolved on activation", function(done) {
         this.timeout(5000);
         var async = function* () {
             try {
@@ -344,7 +344,7 @@
         }();
         async.next();
     });
-    it("TESTTESTonDaily(date) performs daily tasks", function(done) {
+    it("onDaily(date) performs daily tasks", function(done) {
         var now = new Date();
         var async = function*() { 
             try {

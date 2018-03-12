@@ -14,7 +14,8 @@
         }
 
         static priorDate(date=new Date()) {
-            var date = new Date(date.getTime()-24*3600*1000);
+            var date = new Date(date);
+            date.setDate(date.getDate()-1); // subtract days, not hours because of DST
             date.setHours(23);
             date.setMinutes(59);
             date.setSeconds(59,999);

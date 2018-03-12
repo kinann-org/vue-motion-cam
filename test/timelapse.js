@@ -150,6 +150,49 @@
         should(cmd).match(new RegExp(`-o ${output}`, "m"));
         should(cmd).match(/20180212-114510-snap.jpg 20180212-114610-snap.jpg/m);
     });
+    it("TESTTESTpriorDate(date) returns last millisecond in local preceding day", function() {
+        var date = new Date("2018-03-11T06:30:00.000Z");
+        should(Timelapse.priorDate(date).toISOString()).equal("2018-03-10T07:59:59.999Z");
+
+        var date = new Date(2018,2,11,0,30);
+        var priorDate = Timelapse.priorDate(date);
+        should(priorDate.getFullYear()).equal(2018);
+        should(priorDate.getMonth()).equal(2);
+        should(priorDate.getDate()).equal(10);
+        should(priorDate.getHours()).equal(23);
+        should(priorDate.getMinutes()).equal(59);
+        should(priorDate.getSeconds()).equal(59);
+        should(priorDate.getMilliseconds()).equal(999);
+
+        var date = new Date(2018,2,12,0,30);
+        var priorDate = Timelapse.priorDate(date);
+        should(priorDate.getFullYear()).equal(2018);
+        should(priorDate.getMonth()).equal(2);
+        should(priorDate.getDate()).equal(11); 
+        should(priorDate.getHours()).equal(23);
+        should(priorDate.getMinutes()).equal(59);
+        should(priorDate.getSeconds()).equal(59);
+        should(priorDate.getMilliseconds()).equal(999);
+
+        var date = new Date(2018,2,13,0,30);
+        var priorDate = Timelapse.priorDate(date);
+        should(priorDate.getFullYear()).equal(2018);
+        should(priorDate.getMonth()).equal(2);
+        should(priorDate.getDate()).equal(12); 
+        should(priorDate.getHours()).equal(23);
+        should(priorDate.getMinutes()).equal(59);
+        should(priorDate.getSeconds()).equal(59);
+        should(priorDate.getMilliseconds()).equal(999);
+
+        var date = new Date();
+        var priorDate = new Date();
+        priorDate.setDate(date.getDate()-1);
+        should(date-priorDate).equal(24*3600*1000);
+        priorDate.setHours(23);
+        priorDate.setMinutes(59);
+        priorDate.setSeconds(59,999);
+        should.deepEqual(Timelapse.priorDate(date), priorDate);
+    });
     it("createMovie() returns filepath of created timelapse", function(done) {
         var async = function*() {
             try {
