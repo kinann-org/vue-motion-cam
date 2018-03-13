@@ -39,8 +39,11 @@
                           <v-list-tile-title>Open webcam page</v-list-tile-title>
                         </v-list-tile>
                         <v-list-tile v-for="(timelapse,i) in apiModel.timelapses" :key="i"
-                            @click="dailyTimelapse(camera,timelapse.days)">
+                            @click="showTimelapse(camera,timelapse.days)">
                           <v-list-tile-title>Timelapse ({{timelapse.days}}-day)</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile @click="updateTimelapses(camera)">
+                          <v-list-tile-title>Update timelapses</v-list-tile-title>
                         </v-list-tile>
                       </v-list>
                     </v-menu>
@@ -247,7 +250,23 @@ export default {
         openCameraPage(camera) {
             window.open(this.cameraUrl(camera), "_blank");
         },
-        dailyTimelapse(camera, days) {
+        updateTimelapses(camera) {
+            var url = [this.restOrigin(), this.service, "daily"].join("/");
+            var opts = {};
+            var alert = this.alertWarning("Updating timelapses...");
+            this.$http.post(url, opts).then(r => {
+                if (alert.visible) {
+                    alert.type = 'success';
+                    alert.text = alert.text.replace("...", ` => Updated ${new Date().toLocaleTimeString()}`);
+                } else {
+                    this.alertSuccess(`Updated timelapses ${new Date().toLocaleTimeString()}`);
+                }
+            }).catch(err => {
+                alert.visible = false;
+                this.alertError(`Timelapse error: ${err.message}`);
+            });
+        },
+        showTimelapse(camera, days) {
             var url = [this.restOrigin(),this.service, "motion", camera.camera_name, `timelapse-${days}.mp4`].join("/");
             var mp4win = window.open(url,"_blank");
         },

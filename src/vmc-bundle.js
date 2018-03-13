@@ -35,6 +35,7 @@
                     this.resourceMethod("post", "camera/start", this.postCameraStart), // deprecated
                     this.resourceMethod("post", "camera/stop", this.postCameraStop), // deprecated
                     this.resourceMethod("post", "timelapse", this.postTimelapse),
+                    this.resourceMethod("post", "daily", this.postDaily),
                 ]),
             });
             var emitter = this.emitter = options.emitter || new EventEmitter();
@@ -282,6 +283,9 @@
             return this.activateCamera(false);
         }
 
+        postDaily(req, res, next) {
+            return this.onDaily();
+        }
 
         postTimelapse(req, res, next) {
             return new Promise((resolve, reject) => {
