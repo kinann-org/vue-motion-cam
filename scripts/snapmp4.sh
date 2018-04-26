@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 NOTIMELAPSE=`dirname $0`
 NOTIMELAPSE=`realpath $NOTIMELAPSE/../src/ui/assets/no-timelapse.mp4`
@@ -71,7 +71,22 @@ if [ "$VERBOSE" = "1" ]; then echo -e "SIZE\t: $SIZE"; fi
 if [ "$VERBOSE" = "1" ]; then echo -e "FPS\t: $FPS"; fi
 
 cd $TMPDIR
-ffmpeg -y -r $FPS -f image2 -s $SIZE -pattern_type glob -i "*.jpg" -vcodec libx264 -crf 25  -pix_fmt yuv420p "$OUT"
+ffmpeg -y\
+    -r $FPS \
+    -f image2 \
+    -s $SIZE \
+    -pattern_type glob \
+    -i "*.jpg" \
+    -vcodec libx264 \
+    -crf 25  \
+    -pix_fmt yuv420p \
+    -vf "[in] \
+    drawtext=enable='between(t,2,8)': \
+    fontcolor=0xFFFF00FF: \
+    text='Hello': \
+    [out] \
+    " \
+    "$OUT"
 RC=$?; if [ "$RC" != "0" ]; then exit $RC; fi
 echo $OUT
 exit 0
