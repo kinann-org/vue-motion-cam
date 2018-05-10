@@ -30,6 +30,7 @@
             this.camera_name = opts.camera_name || `CAM${id}`;
             this.videodevice = opts.videodevice ||`/dev/video${id-1}`;
             this.framesize = opts.framesize || "640x480";
+            this.text_double = opts.text_double == "on" ? "on" : "off";
             if (opts.hasOwnProperty('signature')) {
                 this.signature = opts.signature;
             }
@@ -386,6 +387,7 @@
                 stream_port: opts.stream_port || (id + this.motion.webcontrol_port),
                 target_dir: path.join(motionDir, `${cam}`),
                 text_left: `${cam}`,
+                text_double: opts.text_double == "on" ? "on" : "off",
                 camera_name: `${cam}`,
                 videodevice: opts.videodevice ||`/dev/video${id-1}`,
                 framesize: opts.framesize || "640x480",
