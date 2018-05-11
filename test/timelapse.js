@@ -225,7 +225,7 @@
                 });
                 should(result).equal(output);
                 should(fs.statSync(result)).properties({
-                    size: 56992,
+                    size: 57334,
                 });
                 done();
             } catch(e) {
