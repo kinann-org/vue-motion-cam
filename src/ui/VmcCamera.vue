@@ -12,12 +12,21 @@
     <div class="vmc-frame">
         <div class="vmc-container">
             <div class="vmc-commands" xs1 style="border-top-left-radius:7px; border-bottom-left-radius:7px;">
-                <v-btn light flat icon @click="toggleCamera()" :disabled="!enableActivation">
-                    <v-icon v-show="!enableActivation">lock</v-icon>
-                    <v-icon v-show="enableActivation && streaming === false">videocam</v-icon>
-                    <v-icon v-show="enableActivation && streaming === true">videocam_off</v-icon>
-                    <v-icon v-show="enableActivation && streaming == null" >hourglass_full</v-icon>
-                </v-btn>
+                <div>
+                <v-tooltip right>
+                    <v-btn slot='activator' light flat icon 
+                        @click="toggleCamera()" :disabled="!enableActivation">
+                        <v-icon v-show="!enableActivation">lock</v-icon>
+                        <v-icon v-show="enableActivation && streaming === false">videocam</v-icon>
+                        <v-icon v-show="enableActivation && streaming === true">videocam_off</v-icon>
+                        <v-icon v-show="enableActivation && streaming == null" >hourglass_full</v-icon>
+                    </v-btn>
+                    <span v-show="!enableActivation">Camera is currently busy</span>
+                    <span v-show="enableActivation && streaming === false">Click to enable streaming</span>
+                    <span v-show="enableActivation && streaming === true">Click to disable streaming</span>
+                    <span v-show="enableActivation && streaming == null">Camera initialization in progress...</span>
+                </v-tooltip>
+                </div>
                 <v-btn light flat icon @click="zoomCamera()" >
                     <v-icon >zoom_in</v-icon>
                 </v-btn>
