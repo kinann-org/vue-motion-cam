@@ -39,6 +39,7 @@
                 ]),
             });
             var emitter = this.emitter = options.emitter || new EventEmitter();
+            winston.info(`VmcBundle-${this.name}.ctor() on:${VmcBundle.EVT_VMC_INVOKE_DAILY}`);
             emitter.on(VmcBundle.EVT_VMC_INVOKE_DAILY, task => {
                 this.onDaily(task.data && task.data.date).then(r => {
                     task.done(r);
@@ -47,6 +48,7 @@
                     task.done(e);
                 });
             });
+            winston.info(`VmcBundle-${this.name}.ctor() on:${VmcBundle.EVT_CAMERA_ACTIVATE}`);
             emitter.on(VmcBundle.EVT_CAMERA_ACTIVATE, value => {
                 this.onActivateCamera(value);
             });
@@ -224,7 +226,7 @@
             }
             if (this.motionConf == null) {
                 return new Promise((resolve, reject) => {
-                    winston.info(`VmcBundle.activateCamera(${start}) pending initialization...`);
+                    winston.info(`VmcBundle.activateCamera(${start}) on:${VmcBundle.EVT_VMC_INITIALIZED}`);
                     this.emitter.on(VmcBundle.EVT_VMC_INITIALIZED, () => {
                         this.activateCamera(start).then(r => {
                             this.activationDate = null;
