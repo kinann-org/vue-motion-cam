@@ -64,7 +64,7 @@
             this.scheduler.addTask(new Task({
                 name: `DailyTimelapse`,
                 event_invoke: VmcBundle.EVT_VMC_INVOKE_DAILY,
-                recur: Scheduler.RECUR_DAILY,
+                msRecur: Scheduler.RECUR_DAILY,
                 dueDate: Scheduler.createDueDate(2,30), // create timelapses at 2:30AM to avoid DST glitches
             }));
             this.scheduler.start();
