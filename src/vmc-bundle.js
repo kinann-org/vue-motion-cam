@@ -70,13 +70,18 @@
             this.scheduler.start();
         }
 
-        initialize() {
+        xinitialize() {
             var promise = super.initialize();
             promise.then(r => {
                 winston.info(`VmcBundle.initialize(${this.name}) EVT_VMC_INITIALIZED`);
                 this.emitter.emit(VmcBundle.EVT_VMC_INITIALIZED);
             });
             return promise;
+        }
+
+        onInitializeEvents(emitter) {
+            winston.info(`VmcBundle.onInitializeEvents(${this.name}) EVT_VMC_INITIALIZED`);
+            this.emitter.emit(VmcBundle.EVT_VMC_INITIALIZED);
         }
 
         static get EVT_CAMERA_ACTIVATE() {return "camera_activate"; }
