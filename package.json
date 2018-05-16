@@ -1,6 +1,6 @@
 {
   "name": "vue-motion-cam",
-  "version": "0.7.11",
+  "version": "0.7.12",
   "description": "Vue/Vuetify RestBundle for webcam motion capture",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,7 @@
     "src": "src"
   },
   "dependencies": {
-    "rest-bundle": "^0.35.1",
+    "rest-bundle": "^0.35.2",
     "rimraf": "^2.6.1"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "start": "scripts/server.js ",
     "test": "npm run test:verbose",
     "test:test": "mocha -w -R min --inline-diffs -g TEST",
-    "test:verbose": "mocha --inline-diffs",
+    "test:verbose": "mocha --inline-diffs --exit",
     "test:watch": "mocha -w --inline-diffs"
   },
   "repository": {
