@@ -1,6 +1,6 @@
 {
   "name": "vue-motion-cam",
-  "version": "0.7.12",
+  "version": "0.7.13",
   "description": "Vue/Vuetify RestBundle for webcam motion capture",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,7 @@
     "src": "src"
   },
   "dependencies": {
-    "rest-bundle": "^0.35.2",
+    "rest-bundle": "^0.35.4",
     "rimraf": "^2.6.1"
   },
   "devDependencies": {
