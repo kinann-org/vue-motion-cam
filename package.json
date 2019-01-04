@@ -31,7 +31,7 @@
     "should": "^11.2.0",
     "supertest": "^3.0.0",
     "webpack": "^3.6.0",
-    "webpack-dev-server": "^2.2.0"
+    "webpack-dev-server": "^2.11.3"
   },
   "scripts": {
     "build": "bash scripts/build",
