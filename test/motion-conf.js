@@ -64,16 +64,14 @@
         should.ok(mc.motion);
         mc.motion.should.properties(customMotion.motion);
     });
-    it("MotionConf.installedVersion() returns version number of motion package", function(done) {
-        var promise = MotionConf.installedVersion();
-        should(promise).instanceOf(Promise);
-        promise.then((result) => {
-            should.ok(result.match(/[0-9.][0-9.]*[0-9]/), 'could not determine motion version');
+    it("TESTTESTinstalledVersion() => motion version number", done=> {
+        (async function() { try {
+            var result = await MotionConf.installedVersion();
+            console.log(`dbg result`,result);
+            should.ok(result.match(/[0-9.][0-9.]*[0-9]/), 
+                'could not determine motion version');
             done();
-        })
-        .catch(err => {
-            done(err);
-        });
+        } catch(e) { done(e); } })();
     });
     it("toJSON() return serializable api model", function() {
         var mc = new MotionConf({
@@ -401,14 +399,15 @@
             startCamera: ['motion', '-c', `${confPath}`],
         });
     });
-    it("startCamera() starts motion camera service", function(done) {
+    it("TESTTESTstartCamera() starts motion camera service", done=>{
         var async = function*() {
             try {
                 const logPath = path.join(confDir, 'motion.log');
                 fs.existsSync(logPath) && fs.unlinkSync(logPath);
                 const mc = new MotionConf(confOpts);
                 mc.status.should.equal(mc.STATUS_UNKNOWN);
-                var process = yield mc.startCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
+                var process = yield mc.startCamera()
+                    .then(r=>async.next(r)).catch(e=>async.throw(e));
                 process.should.instanceOf(child_process.ChildProcess);
                 process.should.equal(mc.spawner.process);
                 mc.status.should.equal(mc.STATUS_OPEN);
@@ -417,14 +416,16 @@
                     mc.statusText.should.match(/8091/);
                     log.should.match(/Started stream/);
                     log.should.match(/8091/);
-                } else if (mc.statusText.indexOf("Waiting for threads to finish") >= 0) {
-          //          console.log(mc);
-        //            mc.statusText.indexOf(mc.pid).should.above(0);
-         //           log.should.match(/Waiting for threads to finish/);
-          //          log.should.match(/8091/);
+                } else if (mc.statusText
+                    .indexOf("Waiting for threads to finish") >= 0) {
+                    //console.log(mc);
+                    //mc.statusText.indexOf(mc.pid).should.above(0);
+                    //log.should.match(/Waiting for threads to finish/);
+                    //log.should.match(/8091/);
                 }
                 should.ok(fs.existsSync(logPath));
-                var response = yield mc.stopCamera().then(r=>async.next(r)).catch(e=>async.throw(e));
+                var response = yield mc.stopCamera()
+                    .then(r=>async.next(r)).catch(e=>async.throw(e));
                 response.should.equal(true);
                 done();
             } catch(err) {

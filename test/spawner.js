@@ -24,7 +24,6 @@
                 should.ok(!fs.existsSync(logName));
                 var result = yield ss.spawn(['echo','hello']).then(r=>async.next(r)).catch(r=>async.next(r));
                 result.should.instanceOf(ChildProcess);
-                ss.logger.should.instanceOf(winston.Logger);
                 should.ok(fs.existsSync(logName));
 
                 // injected logger

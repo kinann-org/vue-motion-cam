@@ -1,6 +1,6 @@
 (function(exports) {
     const { execSync, spawn } = require('child_process');
-    const winston = require('winston');
+    const { js, logger } = require('just-simple').JustSimple;
     const srcPkg = require("../package.json");
     const fs = require("fs");
     const path = require("path");
@@ -24,6 +24,7 @@
 
     class Camera {
         constructor(id, webcontrol_port, opts={}) {
+            logger.logInstance(this, opts);
             this.camera_id = opts.camera_id || id,
             this.input = -1,
             this.stream_port = opts.stream_port || (id + webcontrol_port);
@@ -56,13 +57,14 @@
 
     class MotionConf {
         constructor(opts = {}) {
+            logger.logInstance(this, opts);
             this.type = this.constructor.name;
             this.usage = opts.usage || 'stream';
             this.status = null; //indeterminate
             this.name = opts.name || "test";
             this.confDir = opts.confDir || motionDir;
             this.version = opts.version || "3.2.12";
-            winston.info(`MotionConf ${this.version}`);
+            this.log(`MotionConf ${this.version}`);
             Object.defineProperty(this, "STATUS_UNKNOWN", { value: "unknown" });
             Object.defineProperty(this, "STATUS_OPEN", { value: "open" });
             Object.defineProperty(this, "STATUS_ERROR", { value: "error" });
@@ -123,14 +125,18 @@
         static get Camera() { return Camera; }
         static installedVersion() {
             return new Promise((resolve, reject) => {
-                var cmd = 'bash -c "motion -h 2>&1 | sed -n 1p | sed \\"s/[^0-9]*\\([0-9.]*\\).*/\\1/\\""';
+                var cmd = [
+                    'bash -c "motion -h 2>&1',
+                    'sed -n 1p',
+                    'sed \\"s/[^0-9]*\\([0-9.]*\\).*/\\1/\\""',
+                ].join(' | ');
                 exec(cmd, null, (error, stdout, stderr) => {
                     if (error) {
-                        winston.warn(error);
+                        logger.warn(error);
                         reject(error);
                     } else {
                         var result = stdout.trim();
-                        winston.info(`MotionConf.installedVersion() => ${result}`);
+                        logger.info(`MotionConf.installedVersion() => ${result}`);
                         resolve(result);
                     }
                 });
@@ -244,13 +250,13 @@
                         }
                         var motion = that.motionConf(that.confDir);
                         var confpath = path.join(that.confDir, that.confName);
-                        winston.info(`MotionConf.writeConf() ${confpath}`);
+                        that.log(`MotionConf.writeConf() ${confpath}`);
                         yield fs.writeFile(confpath, motion,
                             (err) => err ? async.throw(err) : async.next(true));
                         var cameras = that.cameraConf();
                         for (var i = 0; i < cameras.length; i++) {
                             var campath = path.join(that.confDir, `camera${i+1}.conf`);
-                            winston.info(`MotionConf.writeConf() ${campath}`);
+                            that.log(`MotionConf.writeConf() ${campath}`);
                             yield fs.writeFile(campath, cameras[i],
                                 (err) => err ? async.throw(err) : async.next(true));
                         };
@@ -258,9 +264,9 @@
                             const pid = that.process.pid;
                             try {
                                 process.kill(pid, 'SIGHUP');
-                                winston.warn("Existing camera configuration updated");
+                                logger.warn("Existing camera configuration updated");
                             } catch (err) {
-                                winston.warn("Updated configuration will be applied when camera is started");
+                                logger.warn("Updated configuration will be applied when camera is started");
                             }
                         }
                         resolve(true);
@@ -298,10 +304,10 @@
                     try {
                         yield that.writeConf().then(r=>async.next(r)).catch(e=>async.throw(e));
                         var r = yield that._spawnMotion().then(r=>async.next(r)).catch(e=>async.throw(e));
-                        winston.info(`MotionConf.startCamera() ok`);
+                        logger.info(`MotionConf.startCamera() ok`);
                         resolve(r);
                     } catch (err) {
-                        winston.error(`MotionConf.startCamera() error`, err.stack);
+                        logger.error(`MotionConf.startCamera() error`, err.stack);
                         reject(err);
                     }
                 }();
@@ -323,14 +329,14 @@
                 this.statusText = line;
                 this.nStreams++;
                 var nExpected = this.cameras.reduce((a,c) => (c.stream_port ? a+1:a), 0);
-                winston.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
+                logger.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
                 return nExpected === this.nStreams ? Spawner.LINE_RESOLVE : Spawner.LINE_INFO;
             } else if (line.match(/Started motion-stream server .n port/)) {
                 this.status = this.STATUS_OPEN;
                 this.statusText = line;
                 this.nStreams++;
                 var nExpected = this.cameras.reduce((a,c) => (c.stream_port ? a+1:a), 0);
-                winston.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
+                logger.info(`${this.nStreams} of ${nExpected} camera streams started: ${line}`);
                 return nExpected === this.nStreams ? Spawner.LINE_RESOLVE : Spawner.LINE_INFO;
             } else {
                 return Spawner.LINE_INFO;
@@ -345,16 +351,16 @@
                 try {
                     process.kill(pid, 0);
                     var err = new Error(`MotionConf._spawnMotion(${that.name}) ignored: camera is already open`);
-                    winston.warn(err.message);
+                    logger.warn(err.message);
                     return Promise.reject(err);
                 } catch (err) {
-                    winston.info("No existing camera service: starting camera service...");
+                    logger.info("No existing camera service: starting camera service...");
                     // process not active
                 }
             }
             that.status = that.STATUS_UNKNOWN;
             that.nStreams = 0;
-            winston.info(`MotionConf._spawnMotion() spawning:${cmd}`);
+            logger.info(`MotionConf._spawnMotion() spawning:${cmd}`);
             return that.spawner.spawn(cmd);
         }
 
@@ -364,11 +370,11 @@
                     try {
                         execSync('pkill -f "^motion -c"');
                         var status = "camera streaming is shutting down";
-                        winston.info(`MotionConf.startCamera() ${status}`);
+                        logger.info(`MotionConf.startCamera() ${status}`);
                         resolve({ status });
                     } catch (err) {
                         var status = `Error stopping camera. ${err.message}`;
-                        winston.error(err.stack);
+                        logger.error(err.stack);
                         resolve({ status });
                     }
                 });
@@ -408,7 +414,7 @@
             devpaths.forEach((dp, i) => { // map devices to cameras
                 var device = devices[dp];
                 if (!device.framesizes) {
-                    winston.warn("skipping unknown device (no framesizes):", device);
+                    logger.warn("skipping unknown device (no framesizes):", device);
                 } else {
                     var camera = cameras.filter(c => (c.signature === device.signature))[0];
                     camera = camera || cameras.filter(c => 
@@ -422,13 +428,13 @@
                     var height = camera.framesize.split("x")[1];
                     var s = null;
                     if (s = device.framesizes.find(s => camera.framesize === s)) {
-                        winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize ok:${s}`);
+                        logger.info(`MotionConf.bindDevices() ${camera.camera_name} framesize ok:${s}`);
                     } else if (s = device.framesizes.find(s => 0<s.indexOf('x'+height))) {
-                        winston.info(`MotionConf.bindDevices() ${camera.camera_name} setting framesize from height: ${s}`);
+                        logger.info(`MotionConf.bindDevices() ${camera.camera_name} setting framesize from height: ${s}`);
                         camera.framesize = s;
                     } else {
                         camera.framesize = device.framesizes[0];
-                        winston.info(`MotionConf.bindDevices() ${camera.camera_name} framesize is now: ${camera.framesize}`);
+                        logger.info(`MotionConf.bindDevices() ${camera.camera_name} framesize is now: ${camera.framesize}`);
                     }
                     camera.videodevice = device.filepath;
                     camera.signature = device.signature;

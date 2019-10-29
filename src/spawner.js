@@ -7,11 +7,15 @@
 
     class Spawner {
         constructor(options = {}) {
-            this.logName = options.logName || path.join(appdir, "spawner.log");
+            this.logName = options.logName || 
+                path.join(appdir, "spawner.log");
             this.logger = options.logger;
-            this.logConsole = options.logConsole == null ? false : options.logConsole;
-            this.stdOutFilter = options.stdOutFilter || (line => Spawner.LINE_INFO);
-            this.stdErrFilter = options.stdErrFilter || this.stdOutFilter;
+            this.logConsole = options.logConsole == null 
+                ? false : options.logConsole;
+            this.stdOutFilter = options.stdOutFilter || 
+                (line => Spawner.LINE_INFO);
+            this.stdErrFilter = options.stdErrFilter || 
+                this.stdOutFilter;
         }
 
         static get LINE_INFO() {
@@ -29,11 +33,13 @@
         initializeLog() {
             var ms = Date.now() - new Date(2017,0);
             var filename = `${this.logName}`;
+            winston.info(`initializeLog() fileName:${filename}`);
             var fd = fs.openSync(filename, 'w');
             var ws = fs.createWriteStream(null, { fd });
             var logOpts = {
                 json: false,
-                timestamp: () => new Date().toLocaleTimeString([], { hour12: false, }),
+                timestamp: () => 
+                    new Date().toLocaleTimeString([], { hour12: false, }),
                 formatter: (options) => {
                     var result =  options.timestamp() +' '+ 
                         options.level.toUpperCase() +' '+ 
@@ -42,22 +48,29 @@
                         if (options.meta) {
                             var keys = Object.keys(options.meta);
                             if (keys.length) {
-                                result +=  ' '+ (options.meta.message != null 
-                                    ? options.meta.message : JSON.stringify(options.meta));
+                                result +=  ' '+ (
+                                    options.meta.message != null 
+                                    ? options.meta.message 
+                                    : JSON.stringify(options.meta)
+                                );
                             }
                         }
                         return result;
                     } catch (err) {
-                        console.log("winston logging error", err, Object.keys(options.meta));
+                        console.log("winston logging error", 
+                            err, Object.keys(options.meta));
                         return result + err.message;
                     }
                 },
             };
             var transports = [
-                new (winston.transports.File)(Object.assign({stream:ws},logOpts)),
+                new (winston.transports.Stream)(Object.assign({
+                    stream:ws
+                },logOpts)),
             ];
-            this.logConsole && transports.push( new (winston.transports.Console)(logOpts) );
-            this.logger = new (winston.Logger)({ transports });
+            this.logConsole && transports.push( 
+                new (winston.transports.Console)(logOpts) );
+            this.logger = winston.createLogger({ transports });
         }
 
         kill() {
